@@ -190,16 +190,14 @@ def process_cur_scan(cur_scan, mask_generator):
         img_path = os.path.join(scan_path, 'color', rgb_map_name)
         
         # # SAM-->super point
-        # masks = mask_generator.generate(color_map)
-        everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.4, iou=0.8,)
-        try:
-            masks = format_result(everything_result[0])
-        except:
-            everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.2, iou=0.8,)
-            masks = format_result(everything_result[0])
+        masks = mask_generator.generate(color_map)
+        # everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.4, iou=0.8,)
+        # try:
+        #     masks = format_result(everything_result[0])
+        # except:
+        #     everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.2, iou=0.8,)
+        #     masks = format_result(everything_result[0])
     
-        # SAM-->super point
-        # masks = mask_generator.generate(color_map)
         masks = sorted(masks, key=(lambda x: x['area']), reverse=True)
         group_ids = np.full((color_map.shape[0], color_map.shape[1]), -1, dtype=int)
         num_masks = len(masks)
@@ -324,10 +322,10 @@ def main():
     splits = ["train", "val"]
 
     # SAM，用于生成SP
-    # mask_generator = SamAutomaticMaskGenerator(build_sam(
-    #     checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
+    mask_generator = SamAutomaticMaskGenerator(build_sam(
+        checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
 
-    mask_generator = FastSAM('../../../FastSAM/FastSAM-x.pt')
+    # mask_generator = FastSAM('../../../FastSAM/FastSAM-x.pt')
     
     # 生成数据集
     for cur_split in splits:

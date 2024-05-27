@@ -327,7 +327,7 @@ def main():
     # mask_generator = SamAutomaticMaskGenerator(build_sam(
     #     checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
 
-    mask_generator = FastSAM('../../../FastSAM/FastSAM-x.pt')
+    mask_generator = FastSAM('../FastSAM-x.pt')
     
     # 生成数据集
     for cur_split in splits:

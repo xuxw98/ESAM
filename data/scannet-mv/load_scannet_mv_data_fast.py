@@ -178,8 +178,7 @@ def process_cur_scan(cur_scan, mask_generator, split):
         in enumerate(zip(rgb_map_list, depth_map_list, poses, aligned_poses)):
         assert frame_i * 20 == int(rgb_map_name[:-4])
         # set interval=40
-        # if frame_i % 2 != 0:
-        if frame_i % 2 != 0 and split == "train":
+        if frame_i % 2 != 0:
             continue
 
         depth_map = cv2.imread(os.path.join(scan_path, 'depth', depth_map_name), -1)
@@ -318,14 +317,14 @@ def main():
                 "AXIS_ALIGN_MATRIX_PATH": AXIS_ALIGN_MATRIX_PATH       
                 }
 
-    # splits = ["train", "val"]
-    splits = ['train']
+    splits = ["train", "val"]
+    # splits = ['train']
     # splits = ["val"]
 
     # mask_generator = SamAutomaticMaskGenerator(build_sam(
     #     checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
     
-    mask_generator = FastSAM('../../../FastSAM/FastSAM-x.pt')
+    mask_generator = FastSAM('../FastSAM-x.pt')
     
     for cur_split in splits:
         make_split(mask_generator, path_dict, cur_split)

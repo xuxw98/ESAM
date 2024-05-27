@@ -179,7 +179,7 @@ def process_cur_scan(cur_scan, mask_generator, split):
         in enumerate(zip(rgb_map_list, depth_map_list, poses, aligned_poses)):
         assert frame_i * 20 == int(rgb_map_name[:-4])
         # set interval=40
-        if frame_i % 2 != 0 and split == "train":
+        if frame_i % 2 != 0:
             continue
 
         depth_map = cv2.imread(os.path.join(scan_path, 'depth', depth_map_name), -1)
@@ -250,7 +250,9 @@ def process_cur_scan(cur_scan, mask_generator, split):
         # ins[mask_dis] = 0
         # further denoise
         ins, object_num = select_points_in_bbox(aligned_xyz, ins, aligned_bboxes, bbox_instance_labels)
-
+        # if object_num <= 2:
+        #     continue
+        
         # Get sem from ins
         sem = np.zeros_like(ins, dtype=np.uint32)
         for ins_ids in np.unique(ins):
@@ -292,8 +294,6 @@ def make_split(mask_generator, path_dict, split="train"):
     f = open("meta_data/scannetv2_%s.txt"%(split))
     scan_name_list = sorted(f.readlines())
     skip = True
-    idx = scan_name_list.index("scene0144_00\n")
-    scan_name_list = scan_name_list[idx:]
 
     for scan_name_index, scan_name in enumerate(scan_name_list):
         cur_parameter = {}
@@ -318,13 +318,13 @@ def main():
                 "AXIS_ALIGN_MATRIX_PATH": AXIS_ALIGN_MATRIX_PATH       
                 }
 
-    # splits = ["train", "val"]
-    splits = ['val']
+    splits = ["train", "val"]
+    # splits = ['val']
 
     # mask_generator = SamAutomaticMaskGenerator(build_sam(
     #     checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
 
-    mask_generator = FastSAM('../../../FastSAM/FastSAM-x.pt')
+    mask_generator = FastSAM('../FastSAM-x.pt')
 
     for cur_split in splits:
         make_split(mask_generator, path_dict, cur_split)

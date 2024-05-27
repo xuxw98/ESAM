@@ -188,25 +188,23 @@ def process_cur_scan(cur_scan, mask_generator):
 
         img_path = os.path.join(scan_path, 'color', rgb_map_name)
         
-        # # SAM-->super point
-        # # masks = mask_generator.generate(color_map)
-        # everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.4, iou=0.8,)
-        # try:
-        #     masks = format_result(everything_result[0])
-        # except:
-        #     everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.2, iou=0.8,)
-        #     masks = format_result(everything_result[0])
+        # SAM-->super point
+        # masks = mask_generator.generate(color_map)
+        everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.4, iou=0.8,)
+        try:
+            masks = format_result(everything_result[0])
+        except:
+            everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.2, iou=0.8,)
+            masks = format_result(everything_result[0])
     
-        # # SAM-->super point
-        # # masks = mask_generator.generate(color_map)
-        # masks = sorted(masks, key=(lambda x: x['area']), reverse=True)
-        # group_ids = np.full((color_map.shape[0], color_map.shape[1]), -1, dtype=int)
-        # num_masks = len(masks)
-        # group_counter = 0
-        # for i in range(num_masks):
-        #     mask_now = masks[i]["segmentation"]
-        #     group_ids[mask_now] = group_counter
-        #     group_counter += 1
+        masks = sorted(masks, key=(lambda x: x['area']), reverse=True)
+        group_ids = np.full((color_map.shape[0], color_map.shape[1]), -1, dtype=int)
+        num_masks = len(masks)
+        group_counter = 0
+        for i in range(num_masks):
+            mask_now = masks[i]["segmentation"]
+            group_ids[mask_now] = group_counter
+            group_counter += 1
 
         # convert depth map to point cloud
         height, width = depth_map.shape    
@@ -217,14 +215,14 @@ def process_cur_scan(cur_scan, mask_generator):
         ww_ind = ww_ind.reshape(-1)
         hh_ind = hh_ind.reshape(-1)
         depth_map = depth_map.reshape(-1)
-        # group_ids = group_ids.reshape(-1)
+        group_ids = group_ids.reshape(-1)
         color_map = color_map.reshape(-1, 3)
 
         valid = np.where(depth_map > 0.1)[0]
         ww_ind = ww_ind[valid]
         hh_ind = hh_ind[valid]
         depth_map = depth_map[valid]
-        # group_ids = group_ids[valid]
+        group_ids = group_ids[valid]
         rgb = color_map[valid]
 
         # For SV: zero-centered, downsample to 20000
@@ -239,7 +237,6 @@ def process_cur_scan(cur_scan, mask_generator):
         if not os.path.exists('./pose_centered/'+scan_name):
             os.makedirs('./pose_centered/'+scan_name)
         np.save('./pose_centered/'+scan_name+'/'+ rgb_map_name.replace('.jpg', '.npy'), pose_centered)
-        continue
         unaligned_xyz = np.concatenate([unaligned_xyz, rgb], axis=-1)
         xyz_all = np.concatenate([unaligned_xyz, aligned_xyz, group_ids.reshape(-1,1)], axis=-1)
         xyz_all = random_sampling(xyz_all, 20000)
@@ -257,8 +254,8 @@ def process_cur_scan(cur_scan, mask_generator):
         # ins[mask_dis] = 0
         # further denoise
         ins, object_num = select_points_in_bbox(aligned_xyz, ins, aligned_bboxes, bbox_instance_labels)
-        if object_num <= 2:
-            continue
+        # if object_num <= 2:
+        #     continue
 
         # Get sem from ins
         sem = np.zeros_like(ins, dtype=np.uint32)
@@ -326,7 +323,7 @@ def main():
     # mask_generator = SamAutomaticMaskGenerator(build_sam(
     #     checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
 
-    mask_generator = FastSAM('../../../FastSAM/FastSAM-x.pt')
+    mask_generator = FastSAM('../FastSAM-x.pt')
     
     # 生成数据集
     for cur_split in splits:

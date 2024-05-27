@@ -8,7 +8,14 @@ We propose a VFM-assisted 3D instance segmentation framework namely OS3D, which 
 
 ## Installation
 
+#### MMDetection3D:
+
 This implementation is based on [mmdetection3d](https://github.com/open-mmlab/mmdetection3d) framework `v1.4.0`. Please follow [here](https://github.com/open-mmlab/mmdetection3d/blob/22aaa47fdb53ce1870ff92cb7e3f96ae38d17f61/docs/en/get_started.md) for environment setup.
+
+#### SAM & FastSAM:
+Please follow [here](https://github.com/facebookresearch/segment-anything/blob/main/README.md) for installation of SAM. Then download the checkpoint for [Vit-H SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth) and put it in the folder 'data'.
+
+Please follow [here](https://github.com/CASIA-IVA-Lab/FastSAM/blob/main/README.md) for installation of FastSAM. Then download the checkpoint for [FastSAM](https://drive.google.com/file/d/1m1sjY4ihXBU1fZXdQ-Xdj-mDltW-2Rqv/view?usp=sharing) and put it in the folder 'data'.
 
 ## Dataset Preparation
 
@@ -18,7 +25,7 @@ For ScanNet200，follow [here](./data/scannet200/README.md).
 
 For ScanNet200-SV, [download](https://github.com/ScanNet/ScanNet) '2D' and '3D' folders to the folder 'data/scannet200-sv', then  run: 
 
-```
+```bash
 python load_scannet_sv_data_v2.py
 cd ../..
 python tools/create_data.py scannet200_sv --root-path ./data/scannet200-sv --out-dir ./data/scannet200-sv --extra-tag scannet200_sv
@@ -26,11 +33,63 @@ python tools/create_data.py scannet200_sv --root-path ./data/scannet200-sv --out
 
 For ScanNet200-MV, link '2D' and '3D' folders to the folder 'data/scannet200-mv', then  run: 
 
-```
+```bash
 python load_scannet_mv_data.py
 cd ../..
 python tools/create_data.py scannet200_mv --root-path ./data/scannet200-mv --out-dir ./data/scannet200-mv --extra-tag scannet200_mv
 ```
+
+You can also generate the data for ScanNet200-SV and ScanNet200-MV using FastSAM instead of SAM by running the following commands:
+
+```bash
+# ScanNet200-SV
+python load_scannet_sv_data_v2_fast.py
+cd ../..
+python tools/create_data.py scannet200_sv --root-path ./data/scannet200-sv --out-dir ./data/scannet200-sv --extra-tag scannet200_sv
+```
+
+```bash
+# ScanNet200-MV
+python load_scannet_mv_data_fast.py
+cd ../..
+python tools/create_data.py scannet200_mv --root-path ./data/scannet200-mv --out-dir ./data/scannet200-mv --extra-tag scannet200_mv
+```
+
+
+#### ScanNet:
+For ScanNet, follow [here](./data/scannet/README.md).
+For ScanNet-SV, link '2D' and '3D' folders to the folder 'data/scannet-sv', then run:
+
+```bash
+python load_scannet_sv_data_v2.py
+cd ../..
+python tools/create_data.py scannet_sv --root-path ./data/scannet-sv --out-dir ./data/scannet-sv --extra-tag scannet_sv
+```
+For ScanNet-MV, link '2D' and '3D' folders to the folder 'data/scannet-mv', then run:
+
+```bash 
+python load_scannet_mv_data.py
+cd ../..
+python tools/create_data.py scannet_mv --root-path ./data/scannet-mv --out-dir ./data/scannet-mv --extra-tag scannet_mv
+```
+
+You can also generate the data for ScanNet-SV and ScanNet-MV using FastSAM instead of SAM by running the following commands:
+
+```bash
+# ScanNet-SV
+python load_scannet_sv_data_v2_fast.py
+cd ../..
+python tools/create_data.py scannet_sv --root-path ./data/scannet-sv --out-dir ./data/scannet-sv --extra-tag scannet_sv
+```
+
+```bash
+# ScanNet-MV
+python load_scannet_mv_data_fast.py
+cd ../..
+python tools/create_data.py scannet_mv --root-path ./data/scannet-mv --out-dir ./data/scannet-mv --extra-tag scannet_mv
+```
+
+
 
 #### SceneNN:
 

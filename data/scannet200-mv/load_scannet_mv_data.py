@@ -280,8 +280,6 @@ def make_split(mask_generator, path_dict, split="train"):
         cur_parameter["scan_name"] = scan_name
         cur_parameter["path_dict"] = path_dict
         cur_parameter["scan_num"] = len(scan_name_list)
-        if scan_name[:-1] != "scene0131_00":
-            continue
         # if scan_name[:-1] == "scene0305_00":
         #     skip = False
         # if not skip:
@@ -299,8 +297,8 @@ def main():
                 "AXIS_ALIGN_MATRIX_PATH": AXIS_ALIGN_MATRIX_PATH       
                 }
 
-    # splits = ["train", "val"]
-    splits = ["val"]
+    splits = ["train", "val"]
+    # splits = ["val"]
 
     mask_generator = SamAutomaticMaskGenerator(build_sam(
         checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))

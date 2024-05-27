@@ -226,13 +226,12 @@ def process_cur_scan(cur_scan, mask_generator):
         indices, dis = pointops.knn_query(1, source_coord, source_offset, target_coord, target_offset)
         indices = indices.cpu().numpy()
         ins = instance_labels[indices.reshape(-1)].astype(np.uint32)
-        breakpoint()
         # mask_dis = dis.reshape(-1).cpu().numpy() > 0.05
         # ins[mask_dis] = 0
         # further denoise
         ins, object_num = select_points_in_bbox(aligned_xyz, ins, aligned_bboxes, bbox_instance_labels)
-        if object_num <= 2:
-            continue
+        # if object_num <= 2:
+        #     continue
 
         # Get sem from ins
         sem = np.zeros_like(ins, dtype=np.uint32)
@@ -296,8 +295,8 @@ def main():
                 "AXIS_ALIGN_MATRIX_PATH": AXIS_ALIGN_MATRIX_PATH       
                 }
 
-    # splits = ["train", "val"]
-    splits = ["val"]
+    splits = ["train", "val"]
+    # splits = ["val"]
 
     mask_generator = SamAutomaticMaskGenerator(build_sam(
         checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
