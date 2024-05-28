@@ -2,9 +2,9 @@
 
 #### ScanNet200: 
 
-For ScanNet200，follow [here](./data/scannet200/README.md).
+For ScanNet200，follow [here](../data/scannet200/README.md).
 
-For ScanNet200-SV, [download](https://github.com/ScanNet/ScanNet) '2D' and '3D' folders to the folder 'data/scannet200-sv', then  run: 
+For ScanNet200-SV, [download](https://github.com/ScanNet/ScanNet) '2D' and '3D' folders to the folder 'data/scannet200-sv', then run: 
 
 ```bash
 python load_scannet_sv_data_v2.py
@@ -20,7 +20,7 @@ cd ../..
 python tools/create_data.py scannet200_mv --root-path ./data/scannet200-mv --out-dir ./data/scannet200-mv --extra-tag scannet200_mv
 ```
 
-You can also generate the data for ScanNet200-SV and ScanNet200-MV using FastSAM instead of SAM by running the following commands:
+You can also generate the data of ScanNet200-SV and ScanNet200-MV using FastSAM instead of SAM by running the following commands:
 
 ```bash
 # ScanNet200-SV
@@ -38,7 +38,7 @@ python tools/create_data.py scannet200_mv --root-path ./data/scannet200-mv --out
 
 
 #### ScanNet:
-For ScanNet, please follow [here](./data/scannet/README.md).
+For ScanNet, please follow [here](../data/scannet/README.md).
 For ScanNet-SV, link '2D' and '3D' folders to the folder 'data/scannet-sv', then run:
 
 ```bash
@@ -54,7 +54,7 @@ cd ../..
 python tools/create_data.py scannet_mv --root-path ./data/scannet-mv --out-dir ./data/scannet-mv --extra-tag scannet_mv
 ```
 
-You can also generate the data for ScanNet-SV and ScanNet-MV using FastSAM instead of SAM by running the following commands:
+You can also generate the data of ScanNet-SV and ScanNet-MV using FastSAM instead of SAM by running the following commands:
 
 ```bash
 # ScanNet-SV
@@ -92,7 +92,7 @@ python tools/create_data.py scenenn_mv --root-path ./data/scenenn-mv --out-dir .
 
 #### 3RScan:
 
-Download 3RScan dataset from [here](https://github.com/WaldJohannaU/3RScan?tab=readme-ov-file). You can acquire '3RScan' folder which contain several scenes renamed as ['000', '001', ...].
+Download 3RScan dataset from [here](https://github.com/WaldJohannaU/3RScan?tab=readme-ov-file). Then put downloaded scenes in a folder named '3RScan' and rename the scenes as ['000', '001', ...].
 
 For 3RScan, link '3RScan' folder to the folder 'data/3RScan', then run:
 
