@@ -7,7 +7,6 @@ from mmdet3d.evaluation.metrics import SegMetric
 from mmdet3d.registry import METRICS
 from mmdet3d.evaluation import panoptic_seg_eval, seg_eval
 from .instance_seg_eval import instance_seg_eval, instance_cat_agnostic_eval
-from .scannet_utils import read_label_mapping
 
 @METRICS.register_module()
 class UnifiedSegMetric(SegMetric):

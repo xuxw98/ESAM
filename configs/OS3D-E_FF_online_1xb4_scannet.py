@@ -115,7 +115,7 @@ color_std = (
 # dataset settings
 train_pipeline = [
     dict(
-        type='LoadAdjacentDataFromFile_TD3D',
+        type='LoadAdjacentDataFromFile_FF',
         coord_type='DEPTH',
         shift_height=False,
         use_color=True,
@@ -155,7 +155,7 @@ train_pipeline = [
         with_rec=use_bbox),
     dict(type='BboxCalculation' if use_bbox else 'NoOperation', voxel_size=0.02),
     dict(
-        type='Pack3DDetInputs_Online_TD3D',
+        type='Pack3DDetInputs_Online_FF',
         keys=[
             'points', 'gt_labels_3d', 'pts_semantic_mask', 'pts_instance_mask',
             'sp_pts_mask', 'gt_sp_masks', 'elastic_coords', 'img_paths',
@@ -164,7 +164,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(
-        type='LoadAdjacentDataFromFile_TD3D',
+        type='LoadAdjacentDataFromFile_FF',
         coord_type='DEPTH',
         shift_height=False,
         use_color=True,
@@ -197,7 +197,7 @@ test_pipeline = [
                 merge_non_stuff_cls=False,
                 with_rec=True),
         ]),
-    dict(type='Pack3DDetInputs_Online_TD3D', keys=['points', 'sp_pts_mask', 'img_paths'] + ['gt_labels_3d'],
+    dict(type='Pack3DDetInputs_Online_FF', keys=['points', 'sp_pts_mask', 'img_paths'] + ['gt_labels_3d'],
          dataset_type='scannet')
 ]
 
