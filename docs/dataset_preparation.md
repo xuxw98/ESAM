@@ -38,7 +38,7 @@ python tools/create_data.py scannet200_mv --root-path ./data/scannet200-mv --out
 
 
 #### ScanNet:
-For ScanNet, follow [here](./data/scannet/README.md).
+For ScanNet, please follow [here](./data/scannet/README.md).
 For ScanNet-SV, link '2D' and '3D' folders to the folder 'data/scannet-sv', then run:
 
 ```bash
@@ -69,8 +69,6 @@ python load_scannet_mv_data_fast.py
 cd ../..
 python tools/create_data.py scannet_mv --root-path ./data/scannet-mv --out-dir ./data/scannet-mv --extra-tag scannet_mv
 ```
-
-
 
 #### SceneNN:
 

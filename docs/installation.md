@@ -1,5 +1,5 @@
 ## Installation
-The code is tested with Python3.8, Pytorch == 1.13.1, CUDA == 11.6, mmdet3d == 1.4.0, mmcv == 2.0.0, mmdet == 3.2.0 and MinkowskiEngine == 0.5.4. We recommend you to use Anaconda to make sure that all dependencies are installed correctly.
+The code is tested with Python == 3.8, Pytorch == 1.13.1, CUDA == 11.6, mmdet3d == 1.4.0, mmcv == 2.0.0, mmdet == 3.2.0 and MinkowskiEngine == 0.5.4. We recommend you to use Anaconda to make sure that all dependencies are installed correctly.
 
 **Step 1**: Download and install Miniconda from the [official website](https://docs.conda.io/en/latest/miniconda.html).
 
@@ -30,3 +30,4 @@ pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --inst
 ```bash
 pip install -r requirements.txt
 ```
+
