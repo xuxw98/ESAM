@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This repo contains PyTorch implementation for paper OS3D:  Online Segment Anything in 3D Scenes based on [MMDetection3D](https://github.com/open-mmlab/mmdetection3d).
+This repo contains PyTorch implementation for paper OS3D:  Online Segment Anything in 3D Scenes based on [MMDetection3D](https://github.com/open-mmlab/mmdetection3d) v1.4.0.
 
 We propose a VFM-assisted 3D instance segmentation framework namely OS3D, which exploits the power of SAM to online segment anything in 3D scenes with high accuracy and fast speed.
 
