@@ -51,7 +51,7 @@ model = dict(
         fix_attention=True,
         objectness_flag=False,
         bbox_flag=use_bbox),
-    merge_head=dict(type='MergeHead', in_channels=256, out_channels=256),
+    merge_head=dict(type='MergeHead', in_channels=256, out_channels=256, norm='layer'),
     merge_criterion=dict(type='ScanNetMergeCriterion_Fast', tmp=True, p2s=False),
     criterion=dict(
         type='ScanNetMixedCriterion',
@@ -130,7 +130,6 @@ train_pipeline = [
         with_sp_mask_3d=True,
         with_rec=use_bbox, cat_rec=use_bbox,
         dataset_type = 'scannet'),
-    dict(type='SwapChairAndFloorWithRec' if use_bbox else 'SwapChairAndFloor'),
     dict(type='PointSegClassMappingWithRec' if use_bbox else 'PointSegClassMapping'),
     dict(
         type='RandomFlip3D',
@@ -185,7 +184,6 @@ test_pipeline = [
         with_sp_mask_3d=True,
         with_rec=True,
         dataset_type = 'scannet'),
-    dict(type='SwapChairAndFloorWithRec'),
     dict(type='PointSegClassMappingWithRec'),
     dict(
         type='MultiScaleFlipAug3D',
