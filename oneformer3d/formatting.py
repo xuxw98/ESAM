@@ -26,6 +26,9 @@ class Pack3DDetInputs_(Pack3DDetInputs):
         'gt_bboxes_3d', 'gt_labels_3d', 'attr_labels', 'depths', 'centers_2d',
         'gt_sp_masks'
     ]
+    def __init__(self, keys, dataset_type='scannet'):
+        super().__init__(keys)
+        self.dataset_type = dataset_type
 
     def pack_single_results(self, results: dict) -> dict:
         """Method to pack the single input data. when the value in this dict is
