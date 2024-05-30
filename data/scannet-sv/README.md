@@ -57,6 +57,11 @@ scannet-sv
 ├── points
 │   ├── scenexxxx_xx_xx.bin
 │   └── ...
+├── pose_centered
+│   ├── scenexxxx_xx
+│   │   ├── x.npy
+│   │   └── ...
+│   └── ...
 ├── scannet_sv_instance_data
 │   ├── scenexxxx_xx_xx_axis_align_matrix.npy
 │   ├── scenexxxx_xx_xx_ins_label.npy

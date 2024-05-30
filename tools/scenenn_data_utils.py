@@ -261,7 +261,7 @@ class SceneNNMVData(object):
                 
             info['pts_paths'] = [osp.join('points', sample_idx, file) for file in files]
             info['super_pts_paths'] = [osp.join('super_points', sample_idx, file) for file in files]
-            info['img_paths'] = [osp.join(self.root_dir, 'SceneNN', sample_idx, 'image','image'+file.split('.')[0].zfill(5)+'.png') for file in files]
+            info['img_paths'] = [osp.join('SceneNN', sample_idx, 'image','image'+file.split('.')[0].zfill(5)+'.png') for file in files]
             info['poses'] = [np.load(osp.join(self.root_dir, 'SceneNN', sample_idx, 'pose', file.split('.')[0].zfill(5)+'.npy')) for file in files]
 
             if not self.test_mode:

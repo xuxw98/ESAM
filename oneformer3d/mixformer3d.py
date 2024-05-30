@@ -17,8 +17,7 @@ from .oneformer3d import ScanNetOneFormer3DMixin
 from .instance_merge import ins_merge_mat, ins_cat, ins_merge, OnlineMerge, GTMerge
 import numpy as np
 from scipy.optimize import linear_sum_assignment
-from .core_utils import point_sample, bbox3d2result
-from .scannet_utils import read_label_mapping
+from .img_backbone import point_sample, bbox3d2result, read_label_mapping
 import os
 
 @MODELS.register_module()
@@ -602,7 +601,6 @@ class ScanNet200MixFormer3D_FF(ScanNetOneFormer3DMixin, Base3DDetector):
         mask_pred = mask_pred[npoint_mask]
 
         return mask_pred, labels, scores
-
 
 @MODELS.register_module()
 class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):

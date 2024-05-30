@@ -292,8 +292,6 @@ def make_split(mask_generator, path_dict, split="train"):
     f = open("meta_data/scannetv2_%s.txt"%(split))
     scan_name_list = sorted(f.readlines())
     skip = True
-    idx = scan_name_list.index('scene0154_00\n')
-    scan_name_list = [scan_name_list[idx]]
     for scan_name_index, scan_name in enumerate(scan_name_list):
         cur_parameter = {}
         cur_parameter["scan_name_index"] = scan_name_index

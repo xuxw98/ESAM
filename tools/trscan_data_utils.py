@@ -262,7 +262,7 @@ class TRScanMVData(object):
                 
             info['pts_paths'] = [osp.join('points', sample_idx, file) for file in files]
             info['super_pts_paths'] = [osp.join('super_points', sample_idx, file) for file in files]
-            info['img_paths'] = [osp.join(self.root_dir, '3RScan', sample_idx, 'sequence','frame-' + file.split('.')[0].zfill(6) + '.color.jpg') for file in files]
+            info['img_paths'] = [osp.join('3RScan', sample_idx, 'sequence','frame-' + file.split('.')[0].zfill(6) + '.color.jpg') for file in files]
             info['poses'] = [np.loadtxt(osp.join(self.root_dir, '3RScan', sample_idx, 'sequence', 'frame-' + file.split('.')[0].zfill(6) +'.pose.txt')) for file in files]
 
             if not self.test_mode:

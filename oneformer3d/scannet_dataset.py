@@ -187,6 +187,7 @@ class ScanNet200SegMVDataset_(ScanNetSegDataset_):
         info['pts_paths'] = [osp.join(self.data_root, path) for path in info['pts_paths']]
         info['pts_instance_mask_paths'] = [osp.join(self.data_root, path) for path in info['pts_instance_mask_paths']]
         info['pts_semantic_mask_paths'] = [osp.join(self.data_root, path) for path in info['pts_semantic_mask_paths']]
+        info['img_paths'] = [osp.join(self.data_root, path) for path in info['img_paths']]
 
         if self.modality['use_camera']:
             for cam_id, img_info in info['images'].items():
@@ -235,6 +236,7 @@ class ScanNetSegMVDataset_(ScanNetSegDataset_):
         info['pts_paths'] = [osp.join(self.data_root, path) for path in info['pts_paths']]
         info['pts_instance_mask_paths'] = [osp.join(self.data_root, path) for path in info['pts_instance_mask_paths']]
         info['pts_semantic_mask_paths'] = [osp.join(self.data_root, path) for path in info['pts_semantic_mask_paths']]
+        info['img_paths'] = [osp.join(self.data_root, path) for path in info['img_paths']]
 
         if self.modality['use_camera']:
             for cam_id, img_info in info['images'].items():

@@ -634,7 +634,7 @@ class ScanNetMVData(object):
             
             info['pts_paths'] = [osp.join('points', sample_idx, file) for file in files]
             info['super_pts_paths'] = [osp.join('super_points', sample_idx, file) for file in files]
-            info['img_paths'] = [osp.join(self.root_dir, '2D', sample_idx, 'color', file.replace('bin','jpg')) for file in files]
+            info['img_paths'] = [osp.join('2D', sample_idx, 'color', file.replace('bin','jpg')) for file in files]
             info['poses'] = [np.loadtxt(osp.join(self.root_dir, '2D', sample_idx, 'pose', file.replace('bin','txt'))) for file in files]
 
             if not self.test_mode:

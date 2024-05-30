@@ -57,7 +57,6 @@ def read_segmentation(filename):
 
 def extract_bbox(mesh_vertices, object_id_to_segs, object_id_to_label_id,
                  instance_ids):
-    breakpoint()
     num_instances = len(np.unique(list(object_id_to_segs.keys())))
     instance_bboxes = np.zeros((num_instances, 7))
     for obj_id in object_id_to_segs:
