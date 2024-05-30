@@ -199,7 +199,7 @@ test_pipeline = [
                 merge_non_stuff_cls=False,
                 with_rec=True),
         ]),
-    dict(type='Pack3DDetInputs_Online', keys=['points', 'sp_pts_mask', 'img_paths'] + ['gt_labels_3d'],
+    dict(type='Pack3DDetInputs_Online', keys=['points', 'sp_pts_mask', 'img_paths'] ,
          dataset_type='scannet')
 ]
 
@@ -268,7 +268,7 @@ default_hooks = dict(
     checkpoint=dict(
         interval=1,
         max_keep_ckpts=1,
-        save_best=['all_ap_50%', 'miou'],
+        save_best=['all_ap_50%'],
         rule='greater'))
 
 # TODO: choose a best mixformer3d_sv

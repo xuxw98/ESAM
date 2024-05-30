@@ -248,7 +248,7 @@ default_hooks = dict(
     checkpoint=dict(
         interval=1,
         max_keep_ckpts=1,
-        save_best=['all_ap_50%', 'miou'],
+        save_best=['all_ap_50%'],
         rule='greater'))
 
 load_from = 'work_dirs/tmp/mask3d_scannet200.pth'
