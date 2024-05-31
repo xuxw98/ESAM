@@ -356,27 +356,7 @@ class ScanNet200MixFormer3D_FF(ScanNetOneFormer3DMixin, Base3DDetector):
         # extract image features
         with torch.no_grad():
             img_features = self.img_backbone(batch_inputs_dict['img_path'])
-        
-        img_metas = []
-        for batch_idx in range(len(batch_data_samples)):
-            img_meta = {}
-            img_meta['depth2img'] = batch_data_samples[batch_idx].depth2img
-            img_meta['sample_idx'] = batch_data_samples[batch_idx].sample_idx
-            img_meta['img_shape'] = batch_data_samples[batch_idx].img_shape
-            img_meta['num_pts_feats'] = batch_data_samples[batch_idx].num_pts_feats
-            img_meta['axis_align_matrix'] = batch_data_samples[batch_idx].axis_align_matrix
-            
-            try:
-                img_meta['pcd_rotation'] = batch_data_samples[batch_idx].pcd_rotation
-                img_meta['pcd_scale_factor'] = batch_data_samples[batch_idx].pcd_scale_factor
-                img_meta['pcd_trans'] = batch_data_samples[batch_idx].pcd_trans
-                img_meta['pcd_rotation_angle'] = batch_data_samples[batch_idx].pcd_rotation_angle
-                img_meta['pcd_vertical_flip'] = batch_data_samples[batch_idx].pcd_vertical_flip
-                img_meta['pcd_horizontal_flip'] = batch_data_samples[batch_idx].pcd_horizontal_flip
-                img_meta['transformation_3d_flow'] = batch_data_samples[batch_idx].transformation_3d_flow
-            except:
-                pass
-            img_metas.append(img_meta)
+        img_metas = [batch_data_sample.img_metas.copy() for batch_data_sample in batch_data_samples]
         
         # construct tensor field
         coordinates, features = [], []
@@ -396,7 +376,7 @@ class ScanNet200MixFormer3D_FF(ScanNetOneFormer3DMixin, Base3DDetector):
 
         # forward of backbone and neck
         x = self.backbone(field.sparse(),
-                          partial(self._f, img_features=img_features, img_metas=img_metas, img_shape=batch_data_samples[0].img_shape))
+                          partial(self._f, img_features=img_features, img_metas=img_metas, img_shape=img_metas[0]['img_shape']))
         if self.with_neck:
             x = self.neck(x)
         x = x.slice(field)
@@ -1227,25 +1207,10 @@ class ScanNet200MixFormer3D_FF_Online(ScanNetOneFormer3DMixin, Base3DDetector):
                 img_features.append(self.img_backbone(img_paths[frame_i])[0])
         
         # TODO check
-        img_metas = []
-        for batch_data_sample in batch_data_samples:
-            img_meta = {}
-            img_meta['depth2img'] = batch_data_sample.depth2img[frame_i]
-            img_meta['sample_idx'] = batch_data_sample.sample_idx
-            img_meta['img_shape'] = batch_data_sample.img_shape
-            img_meta['axis_align_matrix'] = batch_data_sample.axis_align_matrix
-            
-            try:
-                img_meta['pcd_rotation'] = batch_data_sample.pcd_rotation
-                img_meta['pcd_scale_factor'] = batch_data_sample.pcd_scale_factor
-                img_meta['pcd_trans'] = batch_data_sample.pcd_trans
-                img_meta['pcd_rotation_angle'] = batch_data_sample.pcd_rotation_angle
-                img_meta['pcd_vertical_flip'] = batch_data_sample.pcd_vertical_flip
-                img_meta['pcd_horizontal_flip'] = batch_data_sample.pcd_horizontal_flip
-                img_meta['transformation_3d_flow'] = batch_data_sample.transformation_3d_flow
-            except:
-                pass
-            img_metas.append(img_meta)
+        img_metas = [batch_data_sample.img_metas.copy() for batch_data_sample in batch_data_samples]
+        for img_meta in img_metas:
+            img_meta['depth2img'] = img_meta['depth2img'][frame_i]
+    
         # construct tensor field
         coordinates, features = [], []
         for i in range(len(batch_inputs_dict['points'])):
@@ -1264,7 +1229,7 @@ class ScanNet200MixFormer3D_FF_Online(ScanNetOneFormer3DMixin, Base3DDetector):
 
         # forward of backbone and neck
         x = self.backbone(field.sparse(),
-                          partial(self._f, img_features=img_features, img_metas=img_metas, img_shape=batch_data_samples[0].img_shape),
+                          partial(self._f, img_features=img_features, img_metas=img_metas, img_shape=img_metas[0]['img_shape']),
                           memory=self.memory if hasattr(self,'memory') else None)
         if self.with_neck:
             x = self.neck(x)

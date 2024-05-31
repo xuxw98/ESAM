@@ -123,11 +123,15 @@ class Pack3DDetInputs_(Pack3DDetInputs):
         gt_instances = InstanceData()
         gt_pts_seg = PointData()
 
+        if 'img_path' in results:
+            img_shape = Image.open(results['img_path']).size
+            results['img_shape'] = (img_shape[1], img_shape[0])
         img_metas = {}
         for key in self.meta_keys:
             if key in results:
                 img_metas[key] = results[key]
-        data_sample.set_metainfo(img_metas)
+        data_sample.img_metas = img_metas
+        # data_sample.set_metainfo(img_metas)
 
         inputs = {}
         for key in self.keys:
@@ -385,30 +389,30 @@ class Pack3DDetInputs_Online(Pack3DDetInputs):
                     intrinsic @ np.linalg.inv(pose))
             results['depth2img'] = depth2img
         
-        if 'img' in results:
-            if isinstance(results['img'], list):
-                # process multiple imgs in single frame
-                imgs = np.stack(results['img'], axis=0)
-                if imgs.flags.c_contiguous:
-                    imgs = to_tensor(imgs).permute(0, 3, 1, 2).contiguous()
-                else:
-                    imgs = to_tensor(
-                        np.ascontiguousarray(imgs.transpose(0, 3, 1, 2)))
-                results['img'] = imgs
-            else:
-                img = results['img']
-                if len(img.shape) < 3:
-                    img = np.expand_dims(img, -1)
-                # To improve the computational speed by by 3-5 times, apply:
-                # `torch.permute()` rather than `np.transpose()`.
-                # Refer to https://github.com/open-mmlab/mmdetection/pull/9533
-                # for more details
-                if img.flags.c_contiguous:
-                    img = to_tensor(img).permute(2, 0, 1).contiguous()
-                else:
-                    img = to_tensor(
-                        np.ascontiguousarray(img.transpose(2, 0, 1)))
-                results['img'] = img
+        # if 'img' in results:
+        #     if isinstance(results['img'], list):
+        #         # process multiple imgs in single frame
+        #         imgs = np.stack(results['img'], axis=0)
+        #         if imgs.flags.c_contiguous:
+        #             imgs = to_tensor(imgs).permute(0, 3, 1, 2).contiguous()
+        #         else:
+        #             imgs = to_tensor(
+        #                 np.ascontiguousarray(imgs.transpose(0, 3, 1, 2)))
+        #         results['img'] = imgs
+        #     else:
+        #         img = results['img']
+        #         if len(img.shape) < 3:
+        #             img = np.expand_dims(img, -1)
+        #         # To improve the computational speed by by 3-5 times, apply:
+        #         # `torch.permute()` rather than `np.transpose()`.
+        #         # Refer to https://github.com/open-mmlab/mmdetection/pull/9533
+        #         # for more details
+        #         if img.flags.c_contiguous:
+        #             img = to_tensor(img).permute(2, 0, 1).contiguous()
+        #         else:
+        #             img = to_tensor(
+        #                 np.ascontiguousarray(img.transpose(2, 0, 1)))
+        #         results['img'] = img
 
         for key in [
                 'proposals', 'gt_bboxes', 'gt_bboxes_ignore', 'gt_labels',
@@ -447,7 +451,8 @@ class Pack3DDetInputs_Online(Pack3DDetInputs):
             if key in results:
                 img_metas[key] = results[key]
         img_metas['lidar_idx'] = results['lidar_idx']
-        data_sample.set_metainfo(img_metas)
+        data_sample.img_metas = img_metas
+        # data_sample.set_metainfo(img_metas)
 
         inputs = {}
         for key in self.keys:

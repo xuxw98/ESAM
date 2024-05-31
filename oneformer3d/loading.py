@@ -196,6 +196,8 @@ class LoadAdjacentDataFromFile(BaseTransform):
         self.backend_args = backend_args
         self.dataset_type = dataset_type
         
+        self.loader = Compose([dict(type='LoadImageFromFile')])
+        
         self.rotation_matrix = np.array([
                 [1, 0, 0],
                 [0, 0, -1],
@@ -465,12 +467,10 @@ class LoadAdjacentDataFromFile(BaseTransform):
                 if key not in ['img', 'img_prefix', 'img_path']:
                     results[key] = _results[key]
             results['img'] = imgs
-            results['img_path'] = img_file_paths
+            results['img_paths'] = img_file_paths
             results['poses'] = poses
-        
         results['num_frames'] = len(pts_file_paths) if self.num_frames == -1 else self.num_frames
         results['num_sample'] = self.num_sample
-
         return results
 
     def __repr__(self) -> str:
