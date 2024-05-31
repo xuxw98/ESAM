@@ -26,6 +26,8 @@ class ScanNetSegDataset_(ScanNetSegDataset):
         """
         info['super_pts_path'] = osp.join(
             self.data_prefix.get('sp_pts_mask', ''), info['super_pts_path'])
+        info['img_path'] = osp.join(
+            self.data_root, info['img_path'])
 
         info = super().parse_data_info(info)
 

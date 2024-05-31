@@ -439,11 +439,8 @@ class ScanNetSVData(object):
 
             prefix = sample_idx[:12]
             img_idx = sample_idx[13:]
-            info['img_path'] = osp.join(self.root_dir, '2D', prefix, 'color', f'{img_idx}.jpg')
-            try:
-                info['pose'] = np.load(os.path.join(self.root_dir, 'pose_centered', prefix, f'{img_idx}.npy'))
-            except:
-                pass 
+            info['img_path'] = osp.join('2D', prefix, 'color', f'{img_idx}.jpg')
+            info['pose'] = np.load(os.path.join(self.root_dir, 'pose_centered', prefix, f'{img_idx}.npy'))
             if not self.test_mode:
                 pts_instance_mask_path = osp.join(
                     self.root_dir, 'scannet_sv_instance_data',

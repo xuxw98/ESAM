@@ -170,8 +170,7 @@ def process_cur_scan(cur_scan, mask_generator):
         in enumerate(zip(rgb_map_list, depth_map_list, poses, aligned_poses)):
         assert frame_i * 20 == int(rgb_map_name[:-4])
         # set interval=40
-        # if frame_i % 2 != 0:
-        if frame_i % 2 == 0:
+        if frame_i % 2 != 0:
             continue
 
         depth_map = cv2.imread(os.path.join(scan_path, 'depth', depth_map_name), -1)
@@ -242,7 +241,10 @@ def process_cur_scan(cur_scan, mask_generator):
         # Get superpoints
         # TODO: set other_ins_num as 10-->8
         points_without_seg = unaligned_xyz[group_ids == -1]
-        other_ins = KMeans(n_clusters=8, n_init=10).fit(points_without_seg).labels_ + group_ids.max() + 1
+        if len(points_without_seg) < 8:
+            other_ins = np.zeros(len(points_without_seg), dtype=np.int64) + group_ids.max() + 1
+        else:
+            other_ins = KMeans(n_clusters=8, n_init=10).fit(points_without_seg).labels_ + group_ids.max() + 1
         group_ids[group_ids == -1] = other_ins
         unique_ids = np.unique(group_ids)
         if group_ids.max() != len(unique_ids) - 1:
