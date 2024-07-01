@@ -271,6 +271,9 @@ def process_cur_scan(cur_scan, mask_generator, split):
             for i, ids in enumerate(unique_ids):
                 new_group_ids[group_ids == ids] = i
             group_ids = new_group_ids
+            
+        # Add fg_bg_mark to the end, so that the foreground and background can be distinguished
+        group_ids = np.append(group_ids, fg_bg_mark)
         
         # Format output, no need for boxes, only ins/sem mask is OK
         group_ids.astype(np.int64).tofile(

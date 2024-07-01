@@ -279,6 +279,9 @@ def process_cur_scan(cur_scan, mask_generator):
                 new_group_ids[group_ids == ids] = i
             group_ids = new_group_ids
         
+        # Add fg_bg_mark to the end, so that the foreground and background can be distinguished
+        group_ids = np.append(group_ids, fg_bg_mark)
+        
         # Format output, no need for boxes, only ins/sem mask is OK
         np.save(os.path.join(TARGET_DIR, scan_name + "_%s_sp_label.npy" % (20*frame_i)), group_ids)
         np.save(os.path.join(TARGET_DIR, scan_name + "_%s_vert.npy" % (20*frame_i)), unaligned_xyz)

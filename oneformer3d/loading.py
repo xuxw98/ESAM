@@ -47,7 +47,9 @@ class LoadAnnotations3D_(LoadAnnotations3D):
             mmengine.check_file_exist(sp_pts_mask_path)
             sp_pts_mask = np.fromfile(
                 sp_pts_mask_path, dtype=np.int64)
-
+        if len(sp_pts_mask) % 20000 != 0:
+            results['fg_bg_marks'] = sp_pts_mask[-1]
+            sp_pts_mask = sp_pts_mask[:-1]
         results['sp_pts_mask'] = sp_pts_mask
 
         # 'eval_ann_info' will be passed to evaluator
@@ -290,7 +292,12 @@ class LoadAdjacentDataFromFile(BaseTransform):
         except ConnectionError:
             sp_pts_mask = [np.fromfile(sp_pts_mask_path, dtype=np.int64)
                  for sp_pts_mask_path in sp_pts_mask_paths]
-        sp_pts_mask = np.concatenate(sp_pts_mask, axis=0)
+        sp_pts_mask = np.array(sp_pts_mask)
+        if sp_pts_mask.shape[1] != 20000:
+            results['fg_bg_mark'] = sp_pts_mask[:,-1]
+            sp_pts_mask = np.concatenate(sp_pts_mask[:,:-1], axis=0)
+        else:
+            sp_pts_mask = np.concatenate(sp_pts_mask, axis=0)
 
         results['sp_pts_mask'] = sp_pts_mask
         # 'eval_ann_info' will be passed to evaluator
@@ -366,6 +373,11 @@ class LoadAdjacentDataFromFile(BaseTransform):
         if self.use_FF:
             img_file_paths = results['img_paths']
             poses = results['poses']
+        else:
+            if 'img_paths' in results:
+                del results['img_paths']
+            if 'poses' in results:
+                del results['poses']
 
         if self.num_frames > 0:
             begin_idx = np.random.randint(0, len(pts_file_paths))

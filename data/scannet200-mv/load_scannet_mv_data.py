@@ -253,6 +253,9 @@ def process_cur_scan(cur_scan, mask_generator):
                 new_group_ids[group_ids == ids] = i
             group_ids = new_group_ids
         
+        # Add fg_bg_mark to the end, so that the foreground and background can be distinguished
+        group_ids = np.append(group_ids, fg_bg_mark)
+        
         # Format output, no need for boxes, only ins/sem mask is OK
         group_ids.astype(np.int64).tofile(
             os.path.join("super_points/%s" % scan_name, "%s.bin" % (20*frame_i)))
