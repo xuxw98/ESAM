@@ -24,7 +24,6 @@ model = dict(
             conv1_kernel_size=5,
             bn_momentum=0.02)),
     memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(0,1,2,3)),
-    # memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(2,3)),
     pool=dict(type='GeoAwarePooling', channel_proj=96),
     decoder=dict(
         type='ScanNetMixQueryDecoder',
@@ -34,7 +33,7 @@ model = dict(
         temporal_attn=False, # TODO: to be extended
         # the last mp_mode should be "P"
         cross_attn_mode=["", "SP", "SP", "SP"], 
-        mask_pred_mode=["P", "P", "P", "P"],
+        mask_pred_mode=["SP", "SP", "P", "P"],
         num_instance_queries=0,
         num_semantic_queries=0,
         num_instance_classes=num_instance_classes,
@@ -122,7 +121,6 @@ train_pipeline = [
         use_dim=[0, 1, 2, 3, 4, 5],
         num_frames=8,
         num_sample=20000,
-        # max_frames=30,
         with_bbox_3d=False,
         with_label_3d=False,
         with_mask_3d=True,

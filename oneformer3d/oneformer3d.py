@@ -34,7 +34,7 @@ class ScanNetOneFormer3DMixin:
         inst_res = self.predict_by_feat_instance(
             out, superpoints, self.test_cfg.inst_score_thr)
         sem_res = self.predict_by_feat_semantic(out, superpoints)
-        pan_res = self.predict_by_feat_panoptic(out, superpoints)
+        # pan_res = self.predict_by_feat_panoptic(out, superpoints)
 
         pts_semantic_mask = [sem_res.cpu().numpy()]
         pts_instance_mask = [inst_res[0].cpu().bool().numpy()]
@@ -200,7 +200,7 @@ class ScanNetOneFormer3DMixin:
         for i in range(len(x)):
             if self.query_thr < 1:
                 n = (1 - self.query_thr) * torch.rand(1) + self.query_thr
-                n = (n * len(x[i])).int()
+                n = (n * len(x[i])).ceil().int()
                 ids = torch.randperm(len(x[i]))[:n].to(x[i].device)
                 queries.append(x[i][ids])
                 gt_instances[i].query_masks = gt_instances[i].sp_masks[:, ids]

@@ -121,14 +121,14 @@ class ScanNetMixedCriterion:
 
             # point-level gt_mask
             inst_gt = InstanceData()
-            inst_gt.p_masks = insts_pts[i].sp_masks
+            inst_gt.p_masks = insts_pts[i].p_masks
             inst_gt.sp_masks = insts[i].sp_masks[:-n - 1, :]
             if pred['cls_preds'][i].shape[1] == 2:
                 # category agnostic
                 inst_gt.labels_3d = torch.zeros_like(insts[i].labels_3d[:-n - 1])
             else:
                 inst_gt.labels_3d = insts[i].labels_3d[:-n - 1]
-            if insts[i].get('bboxes_3d') is not None:
+            if 'bboxes_3d' in insts[i].keys():
                 inst_gt.bboxes_3d = insts[i].bboxes_3d[:-n - 1, :]
             if insts[i].get('query_masks') is not None:
                 inst_gt.query_masks = insts[i].query_masks[:-n - 1, :]

@@ -14,7 +14,6 @@ model = dict(
     data_preprocessor=dict(type='Det3DDataPreprocessor_'),
     voxel_size=0.02,
     num_classes=num_instance_classes_eval,
-    thresh = 0.54,
     query_thr=0.5,
     backbone=dict(
         type='Res16UNet34C',

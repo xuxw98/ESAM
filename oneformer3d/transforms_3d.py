@@ -177,7 +177,6 @@ class AddSuperPointAnnotations(BaseTransform):
         input_dict['gt_labels_3d'] = gt_labels.numpy()
 
         # create gt semantic markup
-        # breakpoint()
         sem_mask = torch.tensor(input_dict['pts_semantic_mask'])
         sem_mask = torch.nn.functional.one_hot(sem_mask, 
                                     num_classes=self.num_classes + 1)
@@ -284,7 +283,6 @@ class AddSuperPointAnnotations_Online(BaseTransform):
             input_dict['ori_rec_instance_mask'] = rec_instance_mask.clone().numpy()
             rec_instance_mask = rec_mapping[rec_instance_mask]
             input_dict['rec_instance_mask'] = rec_instance_mask.clone().numpy()
-        # breakpoint()
         input_dict['gt_labels_3d'] = []
         input_dict['gt_sp_masks'] = []
         for i in range(input_dict['num_frames']):
@@ -444,7 +442,7 @@ class PointSegClassMappingWithRec(BaseTransform):
 
         results['pts_semantic_mask'] = converted_pts_sem_mask
         results['rec_semantic_mask'] = converted_rec_sem_mask
-    
+
         # 'eval_ann_info' will be passed to evaluator
         if 'eval_ann_info' in results:
             assert 'pts_semantic_mask' in results['eval_ann_info']
@@ -472,7 +470,7 @@ class BboxCalculation(BaseTransform):
         """
         num_points = input_dict['num_frames'] * input_dict['num_sample']
         if 'elastic_coords' in input_dict:
-            rec_xyz = torch.tensor(input_dict['elastic_coords'][num_points:, :3]) * self.voxel_size
+            rec_xyz = torch.tensor(input_dict['elastic_coords'][num_points:]) * self.voxel_size
             input_dict['elastic_coords'] = input_dict['elastic_coords'][:num_points]
         else:
             rec_xyz = input_dict['points'][num_points:, :3].tensor
@@ -511,14 +509,12 @@ class BboxCalculation(BaseTransform):
 
         # Only keep boxes existed in these adjacent frames
         # Order of boxes is equal to order of ins_id in these adjacent frames
-        if len(keep_mask) != 0:
-            bboxes = bboxes[keep_mask]
+        bboxes = bboxes[keep_mask]
         # assert bboxes.shape[0] == num_obj_adjacent
         # TODO: In very very few cases, this assertion will fail. I don't know why :(
         try:
             assert bboxes.shape[0] == num_obj_adjacent
         except:
-            # breakpoint()
             print("Assertion fail in box calculation: ", bboxes.shape[0], num_obj_adjacent)
             if bboxes.shape[0] < num_obj_adjacent:
                 bboxes = torch.cat([bboxes, torch.zeros(num_obj_adjacent - bboxes.shape[0], 7,

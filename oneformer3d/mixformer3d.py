@@ -120,18 +120,15 @@ class ScanNet200MixFormer3D(ScanNetOneFormer3DMixin, Base3DDetector):
             sp_pts_masks.append(sp_pts_mask + sum(n_super_points))
             n_super_points.append(sp_pts_mask.max() + 1)
         sp_idx = torch.cat(sp_pts_masks)
-        # x = scatter_mean(x, sp_idx, dim=0)  # todo: do we need dim?
-        x, all_xyz_w = self.pool(x, sp_idx, all_xyz, with_xyz=True)
+        x, all_xyz_w = self.pool(x, sp_idx, all_xyz)
 
         # apply cls_layer
         features = []
-        sp_xyz_list = []
         for i in range(len(n_super_points)):
             begin = sum(n_super_points[:i])
             end = sum(n_super_points[:i + 1])
-            features.append(x[begin: end, :-3])
-            sp_xyz_list.append(x[begin: end, -3:])
-        return features, point_features, all_xyz_w, sp_xyz_list
+            features.append(x[begin: end])
+        return features, point_features, all_xyz_w
 
     def _forward(*args, **kwargs):
         """Implement abstract method of Base3DDetector."""
@@ -150,7 +147,7 @@ class ScanNet200MixFormer3D(ScanNetOneFormer3DMixin, Base3DDetector):
             dict: A dictionary of loss components.
         """
         ## Backbone
-        x, point_features, all_xyz_w, sp_xyz = self.extract_feat(batch_inputs_dict, batch_data_samples)
+        x, point_features, all_xyz_w = self.extract_feat(batch_inputs_dict, batch_data_samples)
         ## GT-prepare
         gt_instances = [s.gt_instances_3d for s in batch_data_samples]
         gt_point_instances = []
@@ -163,14 +160,14 @@ class ScanNet200MixFormer3D(ScanNetOneFormer3DMixin, Base3DDetector):
                 ins = F.one_hot(ins)
             ins = ins.bool().T
             gt_point = InstanceData()
-            gt_point.sp_masks = ins
+            gt_point.p_masks = ins
             gt_point_instances.append(gt_point)
-        queries, gt_instances, sp_xyz = self._select_queries(x, gt_instances, sp_xyz)
+        queries, gt_instances = self._select_queries(x, gt_instances)
         ## Decoder
-        super_points = [bds.gt_pts_seg.sp_pts_mask for bds in batch_data_samples]
-        x = self.decoder(x, point_features, queries, super_points, all_xyz_w)
+        super_points = ([bds.gt_pts_seg.sp_pts_mask for bds in batch_data_samples], all_xyz_w)
+        x = self.decoder(x, point_features, queries, super_points)
         ## Loss
-        return self.criterion(x, gt_instances, gt_point_instances, sp_xyz, self.decoder.mask_pred_mode)
+        return self.criterion(x, gt_instances, gt_point_instances, None, self.decoder.mask_pred_mode)
 
     def predict(self, batch_inputs_dict, batch_data_samples, **kwargs):
         """Predict results from a batch of inputs and data samples with post-
@@ -195,10 +192,10 @@ class ScanNet200MixFormer3D(ScanNetOneFormer3DMixin, Base3DDetector):
         """
         assert len(batch_data_samples) == 1
         ## Backbone
-        x, point_features, all_xyz_w, sp_xyz = self.extract_feat(batch_inputs_dict, batch_data_samples)
+        x, point_features, all_xyz_w = self.extract_feat(batch_inputs_dict, batch_data_samples)
         ## Decoder
-        super_points = [bds.gt_pts_seg.sp_pts_mask for bds in batch_data_samples]
-        x = self.decoder(x, point_features, x, super_points, all_xyz_w)
+        super_points = ([bds.gt_pts_seg.sp_pts_mask for bds in batch_data_samples], all_xyz_w)
+        x = self.decoder(x, point_features, x, super_points)
         ## Post-processing
         pred_pts_seg = self.predict_by_feat(
             x, batch_data_samples[0].gt_pts_seg.sp_pts_mask)
@@ -390,18 +387,15 @@ class ScanNet200MixFormer3D_FF(ScanNetOneFormer3DMixin, Base3DDetector):
             sp_pts_masks.append(sp_pts_mask + sum(n_super_points))
             n_super_points.append(sp_pts_mask.max() + 1)
         sp_idx = torch.cat(sp_pts_masks)
-        # x = scatter_mean(x, sp_idx, dim=0)  # todo: do we need dim?
-        x, all_xyz_w = self.pool(x, sp_idx, all_xyz, with_xyz=True)
+        x, all_xyz_w = self.pool(x, sp_idx, all_xyz)
 
         # apply cls_layer
         features = []
-        sp_xyz_list = []
         for i in range(len(n_super_points)):
             begin = sum(n_super_points[:i])
             end = sum(n_super_points[:i + 1])
-            features.append(x[begin: end, :-3])
-            sp_xyz_list.append(x[begin: end, -3:])
-        return features, point_features, all_xyz_w, sp_xyz_list
+            features.append(x[begin: end])
+        return features, point_features, all_xyz_w
 
     def _forward(*args, **kwargs):
         """Implement abstract method of Base3DDetector."""
@@ -460,7 +454,7 @@ class ScanNet200MixFormer3D_FF(ScanNetOneFormer3DMixin, Base3DDetector):
             dict: A dictionary of loss components.
         """
         ## Backbone
-        x, point_features, all_xyz_w, sp_xyz = self.extract_feat(batch_inputs_dict, batch_data_samples)
+        x, point_features, all_xyz_w = self.extract_feat(batch_inputs_dict, batch_data_samples)
         ## GT-prepare
         gt_instances = [s.gt_instances_3d for s in batch_data_samples]
         gt_point_instances = []
@@ -473,14 +467,14 @@ class ScanNet200MixFormer3D_FF(ScanNetOneFormer3DMixin, Base3DDetector):
                 ins = F.one_hot(ins)
             ins = ins.bool().T
             gt_point = InstanceData()
-            gt_point.sp_masks = ins
+            gt_point.p_masks = ins
             gt_point_instances.append(gt_point)
-        queries, gt_instances, sp_xyz = self._select_queries(x, gt_instances, sp_xyz)
+        queries, gt_instances = self._select_queries(x, gt_instances)
         ## Decoder
-        super_points = [bds.gt_pts_seg.sp_pts_mask for bds in batch_data_samples]
-        x = self.decoder(x, point_features, queries, super_points, all_xyz_w)
+        super_points = ([bds.gt_pts_seg.sp_pts_mask for bds in batch_data_samples], all_xyz_w)
+        x = self.decoder(x, point_features, queries, super_points)
         ## Loss
-        return self.criterion(x, gt_instances, gt_point_instances, sp_xyz, self.decoder.mask_pred_mode)
+        return self.criterion(x, gt_instances, gt_point_instances, None, self.decoder.mask_pred_mode)
 
     def predict(self, batch_inputs_dict, batch_data_samples, **kwargs):
         """Predict results from a batch of inputs and data samples with post-
@@ -505,10 +499,10 @@ class ScanNet200MixFormer3D_FF(ScanNetOneFormer3DMixin, Base3DDetector):
         """
         assert len(batch_data_samples) == 1
         ## Backbone
-        x, point_features, all_xyz_w, sp_xyz = self.extract_feat(batch_inputs_dict, batch_data_samples)
+        x, point_features, all_xyz_w = self.extract_feat(batch_inputs_dict, batch_data_samples)
         ## Decoder
-        super_points = [bds.gt_pts_seg.sp_pts_mask for bds in batch_data_samples]
-        x = self.decoder(x, point_features, x, super_points, all_xyz_w)
+        super_points = ([bds.gt_pts_seg.sp_pts_mask for bds in batch_data_samples], all_xyz_w)
+        x = self.decoder(x, point_features, x, super_points)
         ## Post-processing
         pred_pts_seg = self.predict_by_feat(
             x, batch_data_samples[0].gt_pts_seg.sp_pts_mask)
@@ -610,8 +604,6 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
                  voxel_size,
                  num_classes,
                  query_thr,
-                 weights=[0.33,0.33,0.33],
-                 thresh=0.55,
                  backbone=None,
                  memory=None,
                  neck=None,
@@ -645,8 +637,6 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         self.voxel_size = voxel_size
         self.num_classes = num_classes
         self.query_thr = query_thr
-        self.weights = weights
-        self.thresh = thresh
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
         self.init_weights()
@@ -661,7 +651,6 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         # construct tensor field
         coordinates, features = [], []
         for i in range(len(batch_inputs_dict['points'])):
-            # pdb.set_trace()
             if 'elastic_coords' in batch_inputs_dict:
                 coordinates.append(
                     batch_inputs_dict['elastic_coords'][i][frame_i] * self.voxel_size)
@@ -669,6 +658,7 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
                 coordinates.append(batch_inputs_dict['points'][i][frame_i, :, :3])
             features.append(batch_inputs_dict['points'][i][frame_i, :, 3:])
         all_xyz = coordinates
+
         coordinates, features = ME.utils.batch_sparse_collate(
             [(c / self.voxel_size, f) for c, f in zip(coordinates, features)],
             device=coordinates[0].device)
@@ -679,7 +669,7 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         if self.with_neck:
             x = self.neck(x)
         x = x.slice(field)
-        point_features = [torch.cat([c,f], dim=-1) for c,f in zip(all_xyz, x.decomposed_features)]  # [B, N, 3+D]
+        point_features = [torch.cat([c,f], dim=-1) for c,f in zip(all_xyz, x.decomposed_features)]
         x = x.features
 
         # apply scatter_mean
@@ -689,7 +679,6 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
             sp_pts_masks.append(sp_pts_mask + sum(n_super_points))
             n_super_points.append(sp_pts_mask.max() + 1)
         sp_idx = torch.cat(sp_pts_masks)
-        # x = scatter_mean(x, sp_idx, dim=0)  # todo: do we need dim?
         x, all_xyz_w = self.pool(x, sp_idx, all_xyz, with_xyz=True)
 
         # apply cls_layer
@@ -718,8 +707,7 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         for i in range(len(x)):
             if self.query_thr < 1:
                 n = (1 - self.query_thr) * torch.rand(1) + self.query_thr
-                n = (n * len(x[i])).int()
-                n = max(1,n)
+                n = (n * len(x[i])).ceil().int()
                 ids = torch.randperm(len(x[i]))[:n].to(x[i].device)
                 queries.append(x[i][ids])
                 gt_instances_[i].query_masks = gt_instances_[i].sp_masks[:, ids]
@@ -761,15 +749,13 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
                         ins = torch.cat([ins, zero_pad], dim=-1)
                 ins = ins.bool().T
                 gt_point = InstanceData()
-                gt_point.sp_masks = ins
+                gt_point.p_masks = ins
                 gt_point_instances.append(gt_point)
+
             queries, gt_instances, sp_xyz = self._select_queries(x, gt_instances, sp_xyz, frame_i)
             ## Decoder
-            super_points = [bds.gt_pts_seg.sp_pts_mask[frame_i] for bds in batch_data_samples]
-            if self.decoder_online and frame_i > 0:
-                x = self.decoder(x, point_features, queries, super_points, all_xyz_w, prev_queries)
-            else:
-                x = self.decoder(x, point_features, queries, super_points, all_xyz_w)
+            super_points = ([bds.gt_pts_seg.sp_pts_mask[frame_i] for bds in batch_data_samples], all_xyz_w)
+            x = self.decoder(x, point_features, queries, super_points)
             ## Query projector
             for i in range(len(gt_instances)):
                 ins_masks_query = gt_instances[i].query_masks[:-self.sem_len, :]
@@ -780,11 +766,6 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
                 merge_feat = self.merge_head(x['queries'])
                 merge_feat_n_frames.append(merge_feat)
                 ins_masks_query_n_frames.append(ins_masks_query_batch)
-            ## Query merging
-            if self.decoder_online:
-                if frame_i == 0: gt_merger = GTMerge()
-                prev_queries = gt_merger.merge(x['queries'], ins_masks_query_batch)
-                if frame_i == num_frames - 1: gt_merger.clean()
             ## Loss
             loss = self.criterion(x, gt_instances, gt_point_instances, sp_xyz, self.decoder.mask_pred_mode)
             for key, value in loss.items():
@@ -810,51 +791,43 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         assert len(batch_data_samples) == 1
         results, query_feats_list, sem_preds_list, sp_xyz_list, bboxes_list, cls_preds_list = [], [], [], [], [], []
         num_frames = batch_inputs_dict['points'][0].shape[0]
-        begin_frame = 0
         if hasattr(self, 'memory'):
             self.memory.reset()
-        
-        for frame_i in range(begin_frame, num_frames):
+        for frame_i in range(num_frames):
             ## Backbone
             x, point_features, all_xyz_w, sp_xyz = self.extract_feat(batch_inputs_dict, batch_data_samples, frame_i)
             ## Decoder
-            super_points = [bds.gt_pts_seg.sp_pts_mask[frame_i] for bds in batch_data_samples]
-            if self.decoder_online and frame_i > 0:
-                x = self.decoder(x, point_features, x, super_points, all_xyz_w, [mv_queries])
-            else:
-                x = self.decoder(x, point_features, x, super_points, all_xyz_w)
+            super_points = ([bds.gt_pts_seg.sp_pts_mask[frame_i] for bds in batch_data_samples], all_xyz_w)
+            x = self.decoder(x, point_features, x, super_points)
             ## Post-processing
             pred_pts_seg, mapping = self.predict_by_feat(
                 x, batch_data_samples[0].gt_pts_seg.sp_pts_mask[frame_i])
-            
             results.append(pred_pts_seg[0])
             ## Query projector, semantic and geometric information
             if hasattr(self, 'merge_head'):
                 query_feats = self.merge_head(x['queries'][0])
                 query_feats_list.append([query_feats[mapping[0]], query_feats[mapping[1]]])
-                sem_preds = x['sem_preds'][0]
+                sem_preds = x['cls_preds'][0]
                 sem_preds_list.append([sem_preds[mapping[0]], sem_preds[mapping[1]]])
                 sp_xyz_list.append([sp_xyz[0][mapping[0]], sp_xyz[0][mapping[1]]])
                 if self.use_bbox:
                     bbox_preds = x['bboxes'][0] # [N, 6]
-                    bboxes_list.append([bbox_preds[mapping[0]], bbox_preds[mapping[1]]])            
-            
+                    bboxes_list.append([bbox_preds[mapping[0]], bbox_preds[mapping[1]]])
             ## Online merging
             if self.test_cfg.merge_type == 'learnable_online':
-                if frame_i == begin_frame:
-                    online_merger = OnlineMerge(self.test_cfg.inscat_topk_insts, self.use_bbox, self.weights, self.thresh, use_inst_label = True)
+                if frame_i == 0:
+                    online_merger = OnlineMerge(self.test_cfg.inscat_topk_insts, self.use_bbox)
                 mv_mask, mv_labels, mv_scores, mv_queries, mv_bboxes = online_merger.merge(
-                    results[-1]['pts_instance_mask'][0],
-                    results[-1]['instance_labels'][0],
-                    results[-1]['instance_scores'][0],
-                    results[-1]['instance_queries'][0],
-                    query_feats_list[-1][0],
-                    sem_preds_list[-1][0],
-                    sp_xyz_list[-1][0],
-                    bboxes_list[-1][0] if self.use_bbox else None)           
-                
+                    results[-1].pop('pts_instance_mask')[0],
+                    results[-1].pop('instance_labels')[0],
+                    results[-1].pop('instance_scores')[0],
+                    results[-1].pop('instance_queries')[0],
+                    query_feats_list.pop(-1)[0],
+                    sem_preds_list.pop(-1)[0],
+                    sp_xyz_list.pop(-1)[0],
+                    bboxes_list.pop(-1)[0] if self.use_bbox else None)
                 # Empty cache. Only offline merging requires the whole list.
-                query_feats_list, sem_preds_list, sp_xyz_list, bboxes_list = [], [], [], []
+                torch.cuda.empty_cache()
                 if frame_i == num_frames - 1:
                     online_merger.clean() # Ignore panoptic segmentation
         
@@ -913,7 +886,7 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         mv_sem = torch.cat([res['pts_semantic_mask'][0] for res in results])
         
         ## Mapping to reconstructed point clouds
-        mv_xyz = batch_inputs_dict['points'][0][begin_frame:num_frames, :, :3].reshape(-1, 3)
+        mv_xyz = batch_inputs_dict['points'][0][:, :, :3].reshape(-1, 3)
         rec_xyz = torch.tensor(batch_data_samples[0].eval_ann_info['rec_xyz'])[:, :3]
         target_coord = rec_xyz.to(mv_xyz.device).contiguous().float()
         target_offset = torch.tensor(target_coord.shape[0]).to(mv_xyz.device).float()
@@ -921,23 +894,20 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         source_offset = torch.tensor(source_coord.shape[0]).to(mv_xyz.device).float()
         indices, dis = pointops.knn_query(1, source_coord, source_offset, target_coord, target_offset)
         indices = indices.reshape(-1).long()
-    
+
         merged_result = PointData(
             pts_semantic_mask=[mv_sem[indices].cpu().numpy()],
             pts_instance_mask=[mv_mask[:, indices].cpu().numpy()],
             instance_labels=mv_labels.cpu().numpy(),
             instance_scores=mv_scores.cpu().numpy())
-    
+
         # Ensemble the predictions with mesh segments (eval_ann_info['segment_ids'])
         if 'segment_ids' in batch_data_samples[0].eval_ann_info:
             merged_result = self.segment_smooth(merged_result, mv_xyz.device,
                 batch_data_samples[0].eval_ann_info['segment_ids'])
-        
         batch_data_samples[0].pred_pts_seg = merged_result
         if self.use_bbox:
             batch_data_samples[0].pred_bbox = mv_bboxes.cpu().numpy()
-        
-    
         return batch_data_samples
     
     def segment_smooth(self, results, device, segment_ids):
@@ -1222,6 +1192,7 @@ class ScanNet200MixFormer3D_FF_Online(ScanNetOneFormer3DMixin, Base3DDetector):
                 coordinates.append(batch_inputs_dict['points'][i][frame_i, :, :3])
             features.append(batch_inputs_dict['points'][i][frame_i, :, 3:])
         all_xyz = coordinates
+        
         coordinates, features = ME.utils.batch_sparse_collate(
             [(c / self.voxel_size, f) for c, f in zip(coordinates, features)],
             device=coordinates[0].device)
@@ -1244,7 +1215,6 @@ class ScanNet200MixFormer3D_FF_Online(ScanNetOneFormer3DMixin, Base3DDetector):
             sp_pts_masks.append(sp_pts_mask + sum(n_super_points))
             n_super_points.append(sp_pts_mask.max() + 1)
         sp_idx = torch.cat(sp_pts_masks)
-        # x = scatter_mean(x, sp_idx, dim=0)  # todo: do we need dim?
         x, all_xyz_w = self.pool(x, sp_idx, all_xyz, with_xyz=True)
 
         # apply cls_layer
@@ -1273,8 +1243,7 @@ class ScanNet200MixFormer3D_FF_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         for i in range(len(x)):
             if self.query_thr < 1:
                 n = (1 - self.query_thr) * torch.rand(1) + self.query_thr
-                n = (n * len(x[i])).int()
-                n = max(1,n)
+                n = (n * len(x[i])).ceil().int()
                 ids = torch.randperm(len(x[i]))[:n].to(x[i].device)
                 queries.append(x[i][ids])
                 gt_instances_[i].query_masks = gt_instances_[i].sp_masks[:, ids]
@@ -1357,15 +1326,12 @@ class ScanNet200MixFormer3D_FF_Online(ScanNetOneFormer3DMixin, Base3DDetector):
                         ins = torch.cat([ins, zero_pad], dim=-1)
                 ins = ins.bool().T
                 gt_point = InstanceData()
-                gt_point.sp_masks = ins
+                gt_point.p_masks = ins
                 gt_point_instances.append(gt_point)
             queries, gt_instances, sp_xyz = self._select_queries(x, gt_instances, sp_xyz, frame_i)
             ## Decoder
-            super_points = [bds.gt_pts_seg.sp_pts_mask[frame_i] for bds in batch_data_samples]
-            if self.decoder_online and frame_i > 0:
-                x = self.decoder(x, point_features, queries, super_points, all_xyz_w, prev_queries)
-            else:
-                x = self.decoder(x, point_features, queries, super_points, all_xyz_w)
+            super_points = ([bds.gt_pts_seg.sp_pts_mask[frame_i] for bds in batch_data_samples], all_xyz_w)
+            x = self.decoder(x, point_features, queries, super_points)
             ## Query projector
             for i in range(len(gt_instances)):
                 ins_masks_query = gt_instances[i].query_masks[:-self.sem_len, :]
@@ -1376,11 +1342,7 @@ class ScanNet200MixFormer3D_FF_Online(ScanNetOneFormer3DMixin, Base3DDetector):
                 merge_feat = self.merge_head(x['queries'])
                 merge_feat_n_frames.append(merge_feat)
                 ins_masks_query_n_frames.append(ins_masks_query_batch)
-            ## Query merging
-            if self.decoder_online:
-                if frame_i == 0: gt_merger = GTMerge()
-                prev_queries = gt_merger.merge(x['queries'], ins_masks_query_batch)
-                if frame_i == num_frames - 1: gt_merger.clean()
+            
             ## Loss
             loss = self.criterion(x, gt_instances, gt_point_instances, sp_xyz, self.decoder.mask_pred_mode)
             for key, value in loss.items():
@@ -1412,11 +1374,8 @@ class ScanNet200MixFormer3D_FF_Online(ScanNetOneFormer3DMixin, Base3DDetector):
             ## Backbone
             x, point_features, all_xyz_w, sp_xyz = self.extract_feat(batch_inputs_dict, batch_data_samples, frame_i)
             ## Decoder
-            super_points = [bds.gt_pts_seg.sp_pts_mask[frame_i] for bds in batch_data_samples]
-            if self.decoder_online and frame_i > 0:
-                x = self.decoder(x, point_features, x, super_points, all_xyz_w, [mv_queries])
-            else:
-                x = self.decoder(x, point_features, x, super_points, all_xyz_w)
+            super_points = ([bds.gt_pts_seg.sp_pts_mask[frame_i] for bds in batch_data_samples], all_xyz_w)
+            x = self.decoder(x, point_features, x, super_points)
             ## Post-processing
             pred_pts_seg, mapping = self.predict_by_feat(
                 x, batch_data_samples[0].gt_pts_seg.sp_pts_mask[frame_i])
@@ -1425,30 +1384,27 @@ class ScanNet200MixFormer3D_FF_Online(ScanNetOneFormer3DMixin, Base3DDetector):
             if hasattr(self, 'merge_head'):
                 query_feats = self.merge_head(x['queries'][0])
                 query_feats_list.append([query_feats[mapping[0]], query_feats[mapping[1]]])
-                sem_preds = x['sem_preds'][0]
+                sem_preds = x['cls_preds'][0]
                 sem_preds_list.append([sem_preds[mapping[0]], sem_preds[mapping[1]]])
                 sp_xyz_list.append([sp_xyz[0][mapping[0]], sp_xyz[0][mapping[1]]])
                 if self.use_bbox:
                     bbox_preds = x['bboxes'][0] # [N, 6]
                     bboxes_list.append([bbox_preds[mapping[0]], bbox_preds[mapping[1]]])
-                cls_preds = x['cls_preds'][0]
-                cls_preds_list.append([cls_preds[mapping[0]], cls_preds[mapping[1]]])
             ## Online merging
             if self.test_cfg.merge_type == 'learnable_online':
                 if frame_i == 0:
                     online_merger = OnlineMerge(self.test_cfg.inscat_topk_insts, self.use_bbox)
                 mv_mask, mv_labels, mv_scores, mv_queries, mv_bboxes = online_merger.merge(
-                    results[-1]['pts_instance_mask'][0],
-                    results[-1]['instance_labels'][0],
-                    # cls_preds_list[-1][0],
-                    results[-1]['instance_scores'][0],
-                    results[-1]['instance_queries'][0],
-                    query_feats_list[-1][0],
-                    sem_preds_list[-1][0],
-                    sp_xyz_list[-1][0],
-                    bboxes_list[-1][0] if self.use_bbox else None)
+                    results[-1].pop('pts_instance_mask')[0],
+                    results[-1].pop('instance_labels')[0],
+                    results[-1].pop('instance_scores')[0],
+                    results[-1].pop('instance_queries')[0],
+                    query_feats_list.pop(-1)[0],
+                    sem_preds_list.pop(-1)[0],
+                    sp_xyz_list.pop(-1)[0],
+                    bboxes_list.pop(-1)[0] if self.use_bbox else None)
                 # Empty cache. Only offline merging requires the whole list.
-                query_feats_list, sem_preds_list, sp_xyz_list, bboxes_list = [], [], [], []
+                torch.cuda.empty_cache()
                 if frame_i == num_frames - 1:
                     online_merger.clean() # Ignore panoptic segmentation
         

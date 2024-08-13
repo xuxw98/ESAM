@@ -1,5 +1,4 @@
 # V2: 2d_point+3d_ins+knn-->2d_ins-->2d_sem
-
 import enum
 import cv2
 import shutil
@@ -14,10 +13,9 @@ import pdb
 import torch
 import pointops
 from load_scannet_data import export
-from fastsam import FastSAM
+from tqdm import tqdm
 
 def make_intrinsic(fx, fy, mx, my): 
-    # 这个函数用于生成内参矩阵
     intrinsic = np.eye(4)   
     intrinsic[0][0] = fx    
     intrinsic[1][1] = fy
@@ -26,7 +24,6 @@ def make_intrinsic(fx, fy, mx, my):
     return intrinsic
 
 def adjust_intrinsic(intrinsic, intrinsic_image_dim, image_dim):
-    # 这个函数用于调整内参矩阵，使得内参矩阵适应新的图像尺寸
     if intrinsic_image_dim == image_dim:
         return intrinsic
     resize_width = int(math.floor(image_dim[1] * float(intrinsic_image_dim[0]) / float(intrinsic_image_dim[1])))
@@ -41,7 +38,6 @@ def adjust_intrinsic(intrinsic, intrinsic_image_dim, image_dim):
 def random_sampling(pc, num_sample, replace=None, return_choices=False):
     """ Input is NxC, output is num_samplexC
     """
-    # 这个函数用于随机采样，输入是点云，输出是采样后的点云
     if replace is None: replace = (pc.shape[0]<num_sample)
     choices = np.random.choice(pc.shape[0], num_sample, replace=replace)
     if return_choices:
@@ -58,7 +54,6 @@ def load_matrix_from_txt(path, shape=(4, 4)):
 
 
 def convert_from_uvd(u, v, depth, intr, pose):
-    # 这个函数用于将深度图转换为点云，输入是深度图，内参矩阵，位姿矩阵，输出是点云坐标
     # u is width index, v is height index
     depth_scale = 1000
     z = depth / depth_scale
@@ -88,7 +83,6 @@ def export_one_scan(scan_name):
 
 
 def select_points_in_bbox(xyz, ins, bboxes, bbox_instance_labels):
-    # 这个函数用于将点云中的点按照bbox进行筛选，输入是点云坐标，点云的实例标签，bbox，bbox的实例标签，输出是筛选后的点云实例标签
     # Add a small margin to box size
     delta = 0.05
     for i in range(bboxes.shape[0]):
@@ -248,8 +242,6 @@ def process_cur_scan(cur_scan, mask_generator):
         # ins[mask_dis] = 0
         # further denoise
         ins, object_num = select_points_in_bbox(aligned_xyz, ins, aligned_bboxes, bbox_instance_labels)
-        # if object_num <= 2:
-        #     continue
 
         # Get sem from ins
         sem = np.zeros_like(ins, dtype=np.uint32)
@@ -272,10 +264,7 @@ def process_cur_scan(cur_scan, mask_generator):
             for i, ids in enumerate(unique_ids):
                 new_group_ids[group_ids == ids] = i
             group_ids = new_group_ids
-        
-        # Add fg_bg_mark to the end, so that the foreground and background can be distinguished
-        group_ids = np.append(group_ids, fg_bg_mark)
-        
+                
         # Format output, no need for boxes, only ins/sem mask is OK
         np.save(os.path.join(TARGET_DIR, scan_name + "_%s_sp_label.npy" % (20*frame_i)), group_ids)
         np.save(os.path.join(TARGET_DIR, scan_name + "_%s_vert.npy" % (20*frame_i)), unaligned_xyz)
@@ -291,12 +280,10 @@ def make_split(mask_generator, path_dict, split="train"):
     f = open("meta_data/scannetv2_%s.txt"%(split))
     scan_name_list = sorted(f.readlines())
 
-    for scan_name_index, scan_name in enumerate(scan_name_list):
+    for scan_name_index, scan_name in enumerate(tqdm(scan_name_list)):
         cur_parameter = {}
         cur_parameter["scan_name_index"] = scan_name_index
         cur_parameter["scan_name"] = scan_name
-        # if scan_name != 'scene0191_00\n':
-        #     continue
         cur_parameter["path_dict"] = path_dict
         cur_parameter["scan_num"] = len(scan_name_list)
         process_cur_scan(cur_parameter, mask_generator)
@@ -316,13 +303,9 @@ def main():
 
     splits = ["train", "val"]
 
-    # SAM，用于生成SP
     mask_generator = SamAutomaticMaskGenerator(build_sam(
         checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
-
-    # mask_generator = FastSAM('../../../FastSAM/FastSAM-x.pt')
     
-    # 生成数据集
     for cur_split in splits:
         make_split(mask_generator, path_dict, cur_split)
 

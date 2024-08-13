@@ -7,11 +7,12 @@ custom_imports = dict(imports=['oneformer3d'])
 num_instance_classes = 1
 num_semantic_classes = 200
 num_instance_classes_eval = 1
+voxel_size = 0.02
 
 model = dict(
     type='ScanNet200MixFormer3D',
     data_preprocessor=dict(type='Det3DDataPreprocessor_'),
-    voxel_size=0.02,
+    voxel_size=voxel_size,
     num_classes=num_instance_classes_eval,
     query_thr=0.5,
     backbone=dict(
@@ -30,7 +31,7 @@ model = dict(
         share_mask_mlp=False,
         # the last mp_mode should be "P"
         cross_attn_mode=["", "SP", "SP", "SP"], 
-        mask_pred_mode=["P", "P", "P", "P"],
+        mask_pred_mode=["SP", "SP", "P", "P"],
         num_instance_queries=0,
         num_semantic_queries=0,
         num_instance_classes=num_instance_classes,
@@ -62,7 +63,8 @@ model = dict(
                     dict(type='MaskBCECost', weight=1.0),
                     dict(type='MaskDiceCost', weight=1.0)],
                 topk=1),
-            loss_weight=[0.5, 1.0, 1.0, 0.5],
+            bbox_loss=dict(type='AxisAlignedIoULoss'),
+            loss_weight=[0.5, 1.0, 1.0, 0.5, 0.5],
             num_classes=num_instance_classes,
             non_object_weight=0.1,
             fix_dice_loss_weight=True,
@@ -181,7 +183,7 @@ train_pipeline = [
         type='ElasticTransfrom',
         gran=[6, 20],
         mag=[40, 160],
-        voxel_size=0.02,
+        voxel_size=voxel_size,
         p=0.5),
     dict(
         type='Pack3DDetInputs_',

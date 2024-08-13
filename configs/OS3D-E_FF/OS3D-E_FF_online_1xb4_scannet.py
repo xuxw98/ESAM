@@ -25,7 +25,6 @@ model = dict(
             conv1_kernel_size=5,
             bn_momentum=0.02)),
     memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(0,1,2,3)),
-    # memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(2,3)),
     pool=dict(type='GeoAwarePooling', channel_proj=96),
     decoder=dict(
         type='ScanNetMixQueryDecoder',
@@ -82,7 +81,7 @@ model = dict(
         # TODO: a larger topK may be better
         topk_insts=20,
         inscat_topk_insts=100,
-        inst_score_thr=0.3,
+        inst_score_thr=0.15,
         pan_score_thr=0.5,
         npoint_thr=100,
         obj_normalization=True,
@@ -123,7 +122,6 @@ train_pipeline = [
         use_dim=[0, 1, 2, 3, 4, 5],
         num_frames=8,
         num_sample=20000,
-        # max_frames=30,
         with_bbox_3d=False,
         with_label_3d=False,
         with_mask_3d=True,
@@ -218,15 +216,11 @@ train_dataloader = dict(
         scene_idxs=None,
         test_mode=False))
 val_dataloader = dict(
-    persistent_workers=False,
-    num_workers=0,
+    # persistent_workers=False,
+    # num_workers=0,
     dataset=dict(
         type=dataset_type,
         ann_file='scannet_mv_oneformer3d_infos_val.pkl',
-        # ann_file='scannet_mv_oneformer3d_infos_val_50.pkl',
-        # ann_file='scannet_mv_oneformer3d_infos_val_gap40.pkl',
-        # ann_file='scannet_mv_oneformer3d_infos_val_gap40_50.pkl',
-        # ann_file='scannet_mv_oneformer3d_infos_val_568.pkl',
         data_root=data_root,
         metainfo=dict(classes=class_names),
         pipeline=test_pipeline,
@@ -273,7 +267,7 @@ default_hooks = dict(
 
 # TODO: choose a best mixformer3d_sv
 # load_from = 'work_dirs/mixformer3d_sv_1xb4_scannet/epoch_128.pth'
-load_from = 'work_dirs/OS3D-E_sv_1xb4_scannet/epoch_128.pth'
+load_from = 'work_dirs/OS3D-E_FF_sv_1xb4_scannet/epoch_128.pth'
 # load_from = 'work_dirs/OS3D-E_FF_sv_1xb4_scannet/epoch_128.pth'
 
 # training schedule for 1x

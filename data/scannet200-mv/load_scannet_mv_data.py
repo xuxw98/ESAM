@@ -21,6 +21,7 @@ import skimage.transform as sktf
 import torch
 import pointops
 from load_scannet_data import export
+from tqdm import tqdm
 
 
 def make_intrinsic(fx, fy, mx, my):
@@ -172,7 +173,6 @@ def process_cur_scan(cur_scan, mask_generator):
         assert frame_i * 20 == int(rgb_map_name[:-4])
         # set interval=40
         if frame_i % 2 != 0:
-        # if frame_i % 2 == 0:
             continue
         print(rgb_map_name)
 
@@ -253,9 +253,6 @@ def process_cur_scan(cur_scan, mask_generator):
                 new_group_ids[group_ids == ids] = i
             group_ids = new_group_ids
         
-        # Add fg_bg_mark to the end, so that the foreground and background can be distinguished
-        group_ids = np.append(group_ids, fg_bg_mark)
-        
         # Format output, no need for boxes, only ins/sem mask is OK
         group_ids.astype(np.int64).tofile(
             os.path.join("super_points/%s" % scan_name, "%s.bin" % (20*frame_i)))
@@ -277,16 +274,12 @@ def make_split(mask_generator, path_dict, split="train"):
     scan_name_list = sorted(f.readlines())
     skip = True
 
-    for scan_name_index, scan_name in enumerate(scan_name_list):
+    for scan_name_index, scan_name in enumerate(tqdm(scan_name_list)):
         cur_parameter = {}
         cur_parameter["scan_name_index"] = scan_name_index
         cur_parameter["scan_name"] = scan_name
         cur_parameter["path_dict"] = path_dict
         cur_parameter["scan_num"] = len(scan_name_list)
-        # if scan_name[:-1] == "scene0305_00":
-        #     skip = False
-        # if not skip:
-        #     process_cur_scan(cur_parameter, mask_generator)
         process_cur_scan(cur_parameter, mask_generator)
 
 

@@ -8,14 +8,13 @@ num_instance_classes = 1
 num_semantic_classes = 200
 num_instance_classes_eval = 1
 use_bbox = True
+voxel_size = 0.02
 
 model = dict(
     type='ScanNet200MixFormer3D_Online',
     data_preprocessor=dict(type='Det3DDataPreprocessor_'),
-    voxel_size=0.02,
+    voxel_size=voxel_size,
     num_classes=num_instance_classes_eval,
-    weights=[0.33,0.33,0.33],
-    thresh=0.54,
     query_thr=0.5,
     backbone=dict(
         type='Res16UNet34C',
@@ -32,10 +31,10 @@ model = dict(
         num_layers=3,
         share_attn_mlp=False, 
         share_mask_mlp=False,
-        temporal_attn=False, # TODO: to be extended
+        temporal_attn=False,
         # the last mp_mode should be "P"
         cross_attn_mode=["", "SP", "SP", "SP"], 
-        mask_pred_mode=["P", "P", "P", "P"],
+        mask_pred_mode=["SP", "SP", "P", "P"],
         num_instance_queries=0,
         num_semantic_queries=0,
         num_instance_classes=num_instance_classes,
@@ -191,10 +190,10 @@ train_pipeline = [
         type='ElasticTransfrom',
         gran=[6, 20],
         mag=[40, 160],
-        voxel_size=0.02,
+        voxel_size=voxel_size,
         p=0.5,
         with_rec=use_bbox),
-    dict(type='BboxCalculation' if use_bbox else 'NoOperation', voxel_size=0.02),
+    dict(type='BboxCalculation' if use_bbox else 'NoOperation', voxel_size=voxel_size),
     dict(
         type='Pack3DDetInputs_Online',
         keys=[
@@ -318,7 +317,6 @@ default_hooks = dict(
         rule='greater'))
 
 # TODO: choose a best mixformer3d_sv
-# load_from = 'work_dirs/mf3d_scannet200_sv_128e_v4x3GAP_cat_agnostic/epoch_128_G_s_add.pth'
 load_from = 'work_dirs/OS3D-E_sv_1xb4_scannet200/epoch_128.pth'
 
 # training schedule for 1x

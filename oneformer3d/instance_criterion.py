@@ -351,11 +351,10 @@ class MixedInstanceCriterion:
 
     """
 
-    def __init__(self, matcher, loss_weight, non_object_weight, num_classes,
-                 fix_dice_loss_weight, iter_matcher, bbox_loss=None, fix_mean_loss=False):
+    def __init__(self, matcher, bbox_loss, loss_weight, non_object_weight, num_classes,
+                 fix_dice_loss_weight, iter_matcher, fix_mean_loss=False):
         self.matcher = TASK_UTILS.build(matcher)
-        if bbox_loss is not None:
-            self.bbox_loss = MODELS.build(bbox_loss)
+        self.bbox_loss = MODELS.build(bbox_loss)
         class_weight = [1] * num_classes + [non_object_weight]
         self.class_weight = class_weight
         self.loss_weight = loss_weight
@@ -395,6 +394,7 @@ class MixedInstanceCriterion:
         pred_masks = aux_outputs['masks']
         pred_bboxes = aux_outputs['bboxes']
         centers = aux_outputs['centers']
+        if centers is None: centers = [None] * len(pred_masks)
 
         if indices is None:
             indices = []
@@ -482,19 +482,12 @@ class MixedInstanceCriterion:
             mask_bce_loss = 0
             mask_dice_loss = 0
 
-        if len(self.loss_weight) == 4:
-            loss = (
-                self.loss_weight[0] * cls_loss +
-                self.loss_weight[1] * mask_bce_loss +
-                self.loss_weight[2] * mask_dice_loss +
-                self.loss_weight[3] * score_loss)
-        else:  
-            loss = (
-                self.loss_weight[0] * cls_loss +
-                self.loss_weight[1] * mask_bce_loss +
-                self.loss_weight[2] * mask_dice_loss +
-                self.loss_weight[3] * score_loss +
-                self.loss_weight[4] * bbox_loss)
+        loss = (
+            self.loss_weight[0] * cls_loss +
+            self.loss_weight[1] * mask_bce_loss +
+            self.loss_weight[2] * mask_dice_loss +
+            self.loss_weight[3] * score_loss +
+            self.loss_weight[4] * bbox_loss)
 
         return loss
     
@@ -570,6 +563,7 @@ class MixedInstanceCriterion:
         pred_masks = pred['masks']
         pred_bboxes = pred['bboxes']
         centers = pred['centers']
+        if centers is None: centers = [None] * len(pred_masks)
 
         # match
         indices = []
@@ -658,19 +652,12 @@ class MixedInstanceCriterion:
             mask_bce_loss = 0
             mask_dice_loss = 0
 
-        if len(self.loss_weight) == 4:
-            loss = (
-                self.loss_weight[0] * cls_loss +
-                self.loss_weight[1] * mask_bce_loss +
-                self.loss_weight[2] * mask_dice_loss +
-                self.loss_weight[3] * score_loss)
-        else:
-            loss = (
-                self.loss_weight[0] * cls_loss +
-                self.loss_weight[1] * mask_bce_loss +
-                self.loss_weight[2] * mask_dice_loss +
-                self.loss_weight[3] * score_loss +
-                self.loss_weight[4] * bbox_loss)
+        loss = (
+            self.loss_weight[0] * cls_loss +
+            self.loss_weight[1] * mask_bce_loss +
+            self.loss_weight[2] * mask_dice_loss +
+            self.loss_weight[3] * score_loss +
+            self.loss_weight[4] * bbox_loss)
 
         if 'aux_outputs' in pred:
             if self.iter_matcher:
@@ -849,9 +836,8 @@ class SparseMatcher:
         cost_value = torch.where(
             gt_instances.query_masks.T, cost_value, self.inf)
 
-        if len(cost_value) <= self.topk:
-            values = cost_value
-        else:
-            values = torch.topk(cost_value, self.topk + 1, dim=0, sorted=True,largest=False).values[-1:, :]
+        values = torch.topk(
+            cost_value, self.topk + 1, dim=0, sorted=True,
+            largest=False).values[-1:, :]
         ids = torch.argwhere(cost_value < values)
         return ids[:, 0], ids[:, 1]

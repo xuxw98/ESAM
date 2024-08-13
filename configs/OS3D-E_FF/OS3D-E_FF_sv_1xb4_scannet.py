@@ -63,8 +63,8 @@ model = dict(
                     dict(type='MaskBCECost', weight=1.0),
                     dict(type='MaskDiceCost', weight=1.0)],
                 topk=1),
-            bbox_loss=None,
-            loss_weight=[0.5, 1.0, 1.0, 0.5],
+            bbox_loss=dict(type='AxisAlignedIoULoss'),
+            loss_weight=[0.5, 1.0, 1.0, 0.5, 0.5],
             num_classes=num_instance_classes,
             non_object_weight=0.1,
             fix_dice_loss_weight=True,
@@ -184,7 +184,7 @@ test_pipeline = [
                 merge_non_stuff_cls=False),
         ]),
     dict(type='Pack3DDetInputs_', keys=['points', 'sp_pts_mask', 'img_path',],
-        dataset_type='scannet')
+         dataset_type='scannet')
 ]
 
 train_dataloader = dict(

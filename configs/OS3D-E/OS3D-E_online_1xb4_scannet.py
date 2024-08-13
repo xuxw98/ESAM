@@ -8,15 +8,14 @@ num_instance_classes = 18
 num_semantic_classes = 20
 num_instance_classes_eval = 18
 use_bbox = True
+voxel_size = 0.02
 
 model = dict(
     type='ScanNet200MixFormer3D_Online',
     data_preprocessor=dict(type='Det3DDataPreprocessor_'),
-    voxel_size=0.02,
+    voxel_size=voxel_size,
     num_classes=num_instance_classes_eval,
     query_thr=0.5,
-    weights=[0.33,0.33,0.33],
-    thresh=0.55,
     backbone=dict(
         type='Res16UNet34C',
         in_channels=3,
@@ -26,17 +25,16 @@ model = dict(
             conv1_kernel_size=5,
             bn_momentum=0.02)),
     memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(0,1,2,3)),
-    # memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(2,3)),
     pool=dict(type='GeoAwarePooling', channel_proj=96),
     decoder=dict(
         type='ScanNetMixQueryDecoder',
         num_layers=3,
         share_attn_mlp=False, 
         share_mask_mlp=False,
-        temporal_attn=False, # TODO: to be extended
+        temporal_attn=False,
         # the last mp_mode should be "P"
         cross_attn_mode=["", "SP", "SP", "SP"], 
-        mask_pred_mode=["P", "P", "P", "P"],
+        mask_pred_mode=["SP", "SP", "P", "P"],
         num_instance_queries=0,
         num_semantic_queries=0,
         num_instance_classes=num_instance_classes,
@@ -83,7 +81,7 @@ model = dict(
         # TODO: a larger topK may be better
         topk_insts=20,
         inscat_topk_insts=100,
-        inst_score_thr=0.3,
+        inst_score_thr=0.21,
         pan_score_thr=0.5,
         npoint_thr=100,
         obj_normalization=True,
@@ -124,7 +122,6 @@ train_pipeline = [
         use_dim=[0, 1, 2, 3, 4, 5],
         num_frames=8,
         num_sample=20000,
-        # max_frames=30,
         with_bbox_3d=False,
         with_label_3d=False,
         with_mask_3d=True,
@@ -158,10 +155,10 @@ train_pipeline = [
         type='ElasticTransfrom',
         gran=[6, 20],
         mag=[40, 160],
-        voxel_size=0.02,
+        voxel_size=voxel_size,
         p=0.5,
         with_rec=use_bbox),
-    dict(type='BboxCalculation' if use_bbox else 'NoOperation', voxel_size=0.02),
+    dict(type='BboxCalculation' if use_bbox else 'NoOperation', voxel_size=voxel_size),
     dict(
         type='Pack3DDetInputs_Online',
         keys=[
@@ -227,10 +224,6 @@ val_dataloader = dict(
     dataset=dict(
         type=dataset_type,
         ann_file='scannet_mv_oneformer3d_infos_val.pkl',
-        # ann_file='scannet_mv_oneformer3d_infos_val_50.pkl',
-        # ann_file='scannet_mv_oneformer3d_infos_val_gap40.pkl',
-        # ann_file='scannet_mv_oneformer3d_infos_val_gap40_50.pkl',
-        # ann_file='scannet_mv_oneformer3d_infos_val_568.pkl',
         data_root=data_root,
         metainfo=dict(classes=class_names),
         pipeline=test_pipeline,
@@ -276,7 +269,7 @@ default_hooks = dict(
         rule='greater'))
 
 # TODO: choose a best mixformer3d_sv
-load_from = 'work_dirs/OS3D-E_sv_1xb4_scannet_v2/epoch_128.pth'
+load_from = 'work_dirs/OS3D-E_sv_1xb4_scannet/epoch_128.pth'
 
 # training schedule for 1x
 train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=128, val_interval=128)

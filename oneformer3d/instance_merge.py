@@ -127,7 +127,6 @@ def ins_merge(points, masks, labels, scores, queries, inscat_topk_insts):
         merged_mask[kept_ins], merged_labels[kept_ins], merged_scores[kept_ins]
     return merged_mask, merged_labels, merged_scores
 
-
 class GTMerge():
     def __init__(self):
         self.cur_queries = None
@@ -139,12 +138,11 @@ class GTMerge():
         self.merge_counts = None
     
     # weighted sum according to count of merge, rather than frame
-    def merge(self, queries, query_ins_masks):
-        breakpoint()
+    def merge(self, queries, cls_preds, query_ins_masks):
         batch_size = len(queries)
         ins_query_list = []
         merge_count_list = []
-        # Intra-frame merge: mean
+        # Intra-frame merge: choose one with max score
         for i in range(batch_size):
             n_instances = len(query_ins_masks[i])
             if n_instances == 0:
@@ -152,11 +150,16 @@ class GTMerge():
             ins_query = []
             merge_count = []
             for j in range(n_instances):
-                ins_query.append(queries[i][query_ins_masks[i][j]].mean(0) if
-                     len(query_ins_masks[i][j]) != 0 else torch.zeros_like(queries[i][0]))
-                merge_count.append(len(query_ins_masks[i][j]))
+                temp_idx = query_ins_masks[i][j]
+                # ins_query.append(queries[i][temp_idx].mean(0) if
+                #      len(temp_idx) != 0 else torch.zeros_like(queries[i][0]))
+                # merge_count.append(len(temp_idx))
+                fg_scores = cls_preds[i][temp_idx].softmax(-1)[:,:-1].sum(-1)
+                ins_query.append(queries[i][temp_idx][fg_scores.argmax()] if
+                     len(temp_idx) != 0 else torch.zeros_like(queries[i][0]))
+                merge_count.append(1 if len(temp_idx) != 0 else 0)
             ins_query_list.append(torch.stack(ins_query, dim=0))
-            merge_count_list.append(torch.tensor(merge_count))
+            merge_count_list.append(torch.tensor(merge_count, device=temp_idx.device).unsqueeze(-1))
         if self.cur_queries is None:
             self.cur_queries = ins_query_list
             self.merge_counts = merge_count_list
@@ -164,12 +167,9 @@ class GTMerge():
             # Inter-frame merge: mean across frame
             for i in range(batch_size):
                 # self.cur_queries[i] = (self.cur_queries[i] * self.fi + ins_query_list[i]) / (self.fi + 1)
-                self.cur_queries[i] = (self.cur_queries[i] * self.merge_counts[i] +
-                     ins_query_list[i] * merge_count_list[i]) / (self.merge_counts[i] + merge_count_list[i])
-                self.merge_counts[i] += merge_count_list[i]
-                # In case 0/0
-                self.cur_queries[i] = torch.where(torch.isnan(self.cur_queries[i]),
-                     torch.zero_like(self.cur_queries[i]), self.cur_queries[i])
+                self.cur_queries[i] = (self.cur_queries[i] * self.merge_counts[i] + ins_query_list[i]
+                     * merge_count_list[i]) / (self.merge_counts[i] + merge_count_list[i] + 1e-6)
+                self.merge_counts[i] = self.merge_counts[i] + merge_count_list[i]
         output_queries = []
         for i in range(batch_size):
             output_queries.append(self.cur_queries[i][self.cur_queries[i].sum(-1) != 0])
@@ -178,17 +178,13 @@ class GTMerge():
 
 
 class OnlineMerge():
-    def __init__(self, inscat_topk_insts, use_bbox=False, weights=[0.33, 0.33, 0.33],thresh=0.55, merge_type="count", use_inst_label = False):
+    def __init__(self, inscat_topk_insts, use_bbox=False, merge_type="count"):
         assert merge_type in ['count', 'frame']
         self.merge_type = merge_type
         self.inscat_topk_insts = inscat_topk_insts
         self.use_bbox = use_bbox
         if self.use_bbox:
             self.iou_calculator = AxisAlignedBboxOverlaps3D()
-            self.weights, self.threshold = weights, thresh  # TODO tune the weights and threshold
-            # self.weights, self.threshold = [0.2, 0.2, 0.4], 0.6
-        else:
-            self.weights, self.threshold = [0.4, 0.4, 0.2], 0.8
         self.cur_masks = None
         self.cur_labels = None
         self.cur_scores = None
@@ -198,7 +194,6 @@ class OnlineMerge():
         self.cur_xyz = None
         self.fi = 0
         self.merge_counts = None
-        self.use_inst_label = use_inst_label
     
     def clean(self):
         self.cur_masks = None
@@ -222,7 +217,6 @@ class OnlineMerge():
             self.cur_query_feats = query_feats
             self.cur_sem_preds = sem_preds
             self.cur_xyz = self._bbox_pred_to_bbox(xyz_list, bboxes) if self.use_bbox else xyz_list
-            # self.cur_xyz = xyz_list
             self.merge_counts = torch.zeros_like(scores).long()
         else:
             self.fi += 1
@@ -237,13 +231,11 @@ class OnlineMerge():
                 xyz_dists = torch.cdist(self.cur_xyz, next_xyz, p=2)
                 xyz_scores = 1 / (xyz_dists + 1e-6)
                         
-            mix_scores = self.weights[0] * query_feat_scores + self.weights[1] * sem_pred_scores \
-                 + self.weights[2] * xyz_scores
-            if self.use_inst_label:
-                inst_label_scores = torch.where(self.cur_labels.unsqueeze(1) == next_labels.unsqueeze(0), torch.ones((self.cur_labels.shape[0], next_labels.shape[0])).to(self.cur_labels.device), torch.zeros((self.cur_labels.shape[0], next_labels.shape[0])).to(self.cur_labels.device))
-                mix_scores = mix_scores * inst_label_scores     
-                 
-            mix_scores = torch.where(mix_scores > self.threshold, mix_scores, torch.zeros_like(mix_scores))
+            mix_scores = query_feat_scores * xyz_scores
+            inst_label_scores = torch.where(self.cur_labels.unsqueeze(1) == next_labels.unsqueeze(0), torch.ones((self.cur_labels.shape[0], next_labels.shape[0])).to(self.cur_labels.device), torch.zeros((self.cur_labels.shape[0], next_labels.shape[0])).to(self.cur_labels.device))
+            
+            mix_scores = torch.where(mix_scores > 0, mix_scores, torch.zeros_like(mix_scores))
+            mix_scores = mix_scores * inst_label_scores
             if mix_scores.shape[0] < mix_scores.shape[1]:
                 mix_scores = torch.cat((mix_scores, torch.zeros((mix_scores.shape[1]
                      - mix_scores.shape[0], mix_scores.shape[1])).to(mix_scores.device)), dim=0)
@@ -263,9 +255,9 @@ class OnlineMerge():
             next_masks_ = torch.where(temp, temp_masks,
                                      torch.zeros((self.cur_masks.shape[0],points_per_mask)).bool().to(next_masks.device))
             self.cur_masks = torch.cat((self.cur_masks, next_masks_), dim=1)
-            no_merge_masks = torch.tensor(np.setdiff1d(np.arange(next_masks.shape[0]),
-                 col_ind.cpu())).to(next_masks.device)
-            former_padding = torch.zeros((no_merge_masks.shape[0], points_per_mask * self.fi)).bool().to(next_masks.device)
+            no_merge_masks = torch.ones(next_masks.shape[0]).bool().to(next_masks.device)
+            no_merge_masks[col_ind] = False
+            former_padding = torch.zeros((no_merge_masks.nonzero().shape[0], points_per_mask * self.fi)).bool().to(next_masks.device)
             new_masks = torch.cat((former_padding, next_masks[no_merge_masks]), dim=1)
             self.cur_masks = torch.cat((self.cur_masks, new_masks), dim=0)
 
@@ -282,11 +274,7 @@ class OnlineMerge():
             self.cur_scores = torch.cat((self.cur_scores, next_scores[no_merge_masks]), dim=0)
             if self.merge_type == 'count':
                 count = count.unsqueeze(-1)
-            if len(self.cur_labels.shape) > 1:
-                self.cur_labels[row_ind] = (self.cur_labels[row_ind] * count + next_labels[col_ind]) / (count + 1)
-                self.cur_labels = torch.cat((self.cur_labels, next_labels[no_merge_masks]), dim=0)
-            else:
-                self.cur_labels = torch.cat((self.cur_labels, next_labels[no_merge_masks]), dim=0)
+            self.cur_labels = torch.cat((self.cur_labels, next_labels[no_merge_masks]), dim=0)
             self.cur_queries[row_ind] = (self.cur_queries[row_ind] * count + next_queries[col_ind]) / (count + 1)
             self.cur_queries = torch.cat((self.cur_queries, next_queries[no_merge_masks]), dim=0)
             self.cur_query_feats[row_ind] = (self.cur_query_feats[row_ind] * count + next_query_feats[col_ind]) / (count + 1)
@@ -304,8 +292,6 @@ class OnlineMerge():
         cur_labels = self.cur_labels[kept_ins]
         cur_queries = self.cur_queries[kept_ins]
         cur_bboxes = self.cur_xyz[kept_ins] if self.use_bbox else None
-        if len(self.cur_labels.shape) > 1:
-            cur_labels = torch.argmax(self.cur_labels[:,:-1], dim=-1)
         # cur_labels = torch.zeros_like(self.cur_scores).long()
         return cur_masks, cur_labels, cur_scores, cur_queries, cur_bboxes
     

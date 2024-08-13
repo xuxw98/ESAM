@@ -22,7 +22,6 @@ class CrossAttentionLayer(BaseModule):
             d_model, num_heads, dropout=dropout, batch_first=True)
         self.norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
-        # todo: why BaseModule doesn't call it without us?
         self.init_weights()
 
     def init_weights(self):
@@ -491,25 +490,23 @@ class ScanNetMixQueryDecoder(QueryDecoder):
         assert isinstance(mask_pred_mode, list)
         assert mask_pred_mode[-1] == "P"
 
-        self.share_attn_mlp = share_attn_mlp
-        if not share_attn_mlp:
-            self.input_pts_proj = nn.Sequential(
-                nn.Linear(3 + in_channels, d_model), nn.LayerNorm(d_model), nn.ReLU())
-        
-        self.share_mask_mlp = share_mask_mlp
-        if not share_mask_mlp:
-            self.x_pts_mask = nn.Sequential(
-                nn.Linear(3 + in_channels, d_model), nn.ReLU(),
-                nn.Linear(d_model, d_model))
-        
         self.cross_attn_mode = cross_attn_mode
         self.mask_pred_mode = mask_pred_mode
         self.temporal_attn = temporal_attn
-        # apply cross attention on previous(K,V) and current(Q) queries
-        if self.temporal_attn:
-            self.temporal_aggregator = CrossAttentionLayer(d_model, kwargs['num_heads'],
-                 kwargs['dropout'], kwargs['fix_attention'])
-        
+
+        self.share_attn_mlp = share_attn_mlp
+        if not share_attn_mlp:
+            if "P" in self.cross_attn_mode:
+                self.input_pts_proj = nn.Sequential(
+                    nn.Linear(3 + in_channels, d_model), nn.LayerNorm(d_model), nn.ReLU())
+
+        self.share_mask_mlp = share_mask_mlp
+        if not share_mask_mlp:
+            if "P" in self.mask_pred_mode:
+                self.x_pts_mask = nn.Sequential(
+                    nn.Linear(3 + in_channels, d_model), nn.ReLU(),
+                    nn.Linear(d_model, d_model))
+
         self.bbox_flag = bbox_flag
         if self.bbox_flag:
             self.out_reg = nn.Sequential(
@@ -564,22 +561,22 @@ class ScanNetMixQueryDecoder(QueryDecoder):
             pred_bboxes.append(pred_bbox)
             if self.mask_pred_mode[layer] == "SP":
                 pred_mask = torch.einsum('nd,md->nm', norm_query, mask_feats[i])
-            else:
+            elif self.mask_pred_mode[layer] == "P":
                 pred_mask = torch.einsum('nd,md->nm', norm_query, mask_pts_feats[i])
+            else:
+                raise NotImplementedError("Query decoder not implemented!")
             if self.attn_mask:
                 attn_mask = (pred_mask.sigmoid() < 0.5).bool()
                 attn_mask[torch.where(
                     attn_mask.sum(-1) == attn_mask.shape[-1])] = False
                 attn_mask = attn_mask.detach()
-                # if len(attn_mask) == 0:
-                #     breakpoint()
                 attn_masks.append(attn_mask)
             pred_masks.append(pred_mask)
         attn_masks = attn_masks if self.attn_mask else None
         sem_preds = sem_preds if last_flag else None
         return cls_preds, sem_preds, pred_scores, pred_masks, attn_masks, object_queries, pred_bboxes
 
-    def forward_iter_pred(self, sp_feats, p_feats, queries, super_points, all_xyz_w, prev_queries=None):
+    def forward_iter_pred(self, sp_feats, p_feats, queries, super_points, prev_queries=None):
         """Iterative forward pass.
         
         Args:
@@ -594,12 +591,12 @@ class ScanNetMixQueryDecoder(QueryDecoder):
         """
         cls_preds, sem_preds, pred_scores, pred_masks = [], [], [], []
         object_queries, pred_bboxes = [], []
-        inst_feats = [self.input_proj(y) for y in sp_feats]
-        inst_pts_feats = [self.input_proj(y) if self.share_attn_mlp
-             else self.input_pts_proj(y) for y in p_feats]
-        mask_feats = [self.x_mask(y) for y in sp_feats]
-        mask_pts_feats = [self.x_mask(y) if self.share_mask_mlp
-             else self.x_pts_mask(y) for y in p_feats]
+        inst_feats = [self.input_proj(y) for y in sp_feats] if "SP" in self.cross_attn_mode else None
+        inst_pts_feats = [self.input_proj(y) if self.share_attn_mlp else self.input_pts_proj(y)
+             for y in p_feats] if "P" in self.cross_attn_mode else None
+        mask_feats = [self.x_mask(y) for y in sp_feats] if "SP" in self.mask_pred_mode else None
+        mask_pts_feats = [self.x_mask(y) if self.share_mask_mlp else self.x_pts_mask(y)
+             for y in p_feats] if "P" in self.mask_pred_mode else None
         queries = self._get_queries(queries, len(sp_feats))
         cls_pred, sem_pred, pred_score, pred_mask, attn_mask, object_query, pred_bbox = \
              self._forward_head(queries, mask_feats, mask_pts_feats, last_flag=False, layer=0)
@@ -613,9 +610,9 @@ class ScanNetMixQueryDecoder(QueryDecoder):
             if self.cross_attn_mode[i+1] == "SP" and self.mask_pred_mode[i] == "SP":
                 queries = self.cross_attn_layers[i](inst_feats, queries, attn_mask)
             elif self.cross_attn_mode[i+1] == "SP" and self.mask_pred_mode[i] == "P":   # current method, change P mask to SP
-                xyz_weights = torch.chunk(all_xyz_w, len(super_points), dim=0)
-                attn_mask_score = [scatter_mean(att.float() * xyz_w.view(1, -1), sp, dim=1) 
-                                   for att, sp, xyz_w in zip(attn_mask, super_points, xyz_weights)]
+                xyz_weights = torch.chunk(super_points[1], len(super_points[0]), dim=0)
+                attn_mask_score = [scatter_mean(att.float() * xyz_w.view(1, -1), sp, dim=1)
+                     for att, sp, xyz_w in zip(attn_mask, super_points[0], xyz_weights)]
                 attn_mask = [(att > 0.5).bool() for att in attn_mask_score] # > 0.5, not <
                 # If attn_mask has all-True row, the result of CA will be nan
                 for j in range(len(attn_mask)):
@@ -623,16 +620,15 @@ class ScanNetMixQueryDecoder(QueryDecoder):
                     attn_mask[j] *= mask
                 queries = self.cross_attn_layers[i](inst_feats, queries, attn_mask)
             elif self.cross_attn_mode[i+1] == "P" and self.mask_pred_mode[i] == "SP":
-                attn_mask = [att[:, sp] for att, sp in zip(attn_mask, super_points)]
+                attn_mask = [att[:, sp] for att, sp in zip(attn_mask, super_points[0])]
+                queries = self.cross_attn_layers[i](inst_pts_feats, queries, attn_mask)
+            elif self.cross_attn_mode[i+1] == "P" and self.mask_pred_mode[i] == "P":
                 queries = self.cross_attn_layers[i](inst_pts_feats, queries, attn_mask)
             else:
-                queries = self.cross_attn_layers[i](inst_pts_feats, queries, attn_mask)
+                raise NotImplementedError("Not support yet!")
             queries = self.self_attn_layers[i](queries)
             queries = self.ffn_layers[i](queries)
             last_flag = i == len(self.cross_attn_layers) - 1
-            # Online aggregation for decoder
-            if last_flag and self.temporal_attn and prev_queries is not None:
-                queries = self.temporal_aggregator(prev_queries, queries)
             cls_pred, sem_pred, pred_score, pred_mask, attn_mask, object_query, pred_bbox = \
                  self._forward_head(queries, mask_feats, mask_pts_feats, last_flag, layer=i+1)
             cls_preds.append(cls_pred)
@@ -656,7 +652,7 @@ class ScanNetMixQueryDecoder(QueryDecoder):
             bboxes=pred_bboxes[-1],
             aux_outputs=aux_outputs)
     
-    def forward(self, sp_feats, p_feats, queries, super_points, all_xyz_w, prev_queries=None):
+    def forward(self, sp_feats, p_feats, queries, super_points, prev_queries=None):
         """Forward pass.
         
         Args:
@@ -669,7 +665,7 @@ class ScanNetMixQueryDecoder(QueryDecoder):
             Dict: with labels, masks, scores, and possibly aux_outputs.
         """
         if self.iter_pred:
-            return self.forward_iter_pred(sp_feats, p_feats, queries, super_points, all_xyz_w, prev_queries)
+            return self.forward_iter_pred(sp_feats, p_feats, queries, super_points, prev_queries)
         else:
             raise NotImplementedError("No simple forward!!!")
 

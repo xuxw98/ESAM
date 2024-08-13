@@ -30,7 +30,7 @@ model = dict(
         share_mask_mlp=False,
         # the last mp_mode should be "P"
         cross_attn_mode=["", "SP", "SP", "SP"], 
-        mask_pred_mode=["P", "P", "P", "P"],
+        mask_pred_mode=["SP", "SP", "P", "P"],
         num_instance_queries=0,
         num_semantic_queries=0,
         num_instance_classes=num_instance_classes,

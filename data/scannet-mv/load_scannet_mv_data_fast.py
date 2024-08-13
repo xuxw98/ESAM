@@ -16,6 +16,7 @@ import torch
 import pointops
 from load_scannet_data import export
 from fastsam import FastSAM
+from tqdm import tqdm
 
 
 def make_intrinsic(fx, fy, mx, my):
@@ -187,18 +188,13 @@ def process_cur_scan(cur_scan, mask_generator, split):
 
         img_path = os.path.join(scan_path, 'color', rgb_map_name)
         # SAM-->super point
-        # masks = mask_generator.generate(color_map)
-        everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.4, iou=0.8,)
+        everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.1, iou=0.9,)
         try:
             masks = format_result(everything_result[0])
         except:
-            try:
-                everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.2, iou=0.8,)
-                masks = format_result(everything_result[0])
-            except:
-                everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.1, iou=0.8,)
-                masks = format_result(everything_result[0])
-        
+            everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=640, conf=0.1, iou=0.7,)
+            masks = format_result(everything_result[0])
+
         masks = sorted(masks, key=(lambda x: x['area']), reverse=True)
         group_ids = np.full((color_map.shape[0], color_map.shape[1]), -1, dtype=int)
         num_masks = len(masks)
@@ -259,10 +255,11 @@ def process_cur_scan(cur_scan, mask_generator, split):
         # Get superpoints
         # TODO: set other_ins_num as 10-->8
         points_without_seg = unaligned_xyz[group_ids == -1]
-        if len(points_without_seg) < 8:
+        fg_bg_mark = group_ids.max() + 1 
+        if len(points_without_seg) < 20:
             other_ins = np.zeros(len(points_without_seg), dtype=np.int64) + group_ids.max() + 1
         else:
-            other_ins = KMeans(n_clusters=8, n_init=10).fit(points_without_seg).labels_ + group_ids.max() + 1
+            other_ins = KMeans(n_clusters=20, n_init=10).fit(points_without_seg).labels_ + group_ids.max() + 1
         group_ids[group_ids == -1] = other_ins
         unique_ids = np.unique(group_ids)
         # print("unique_ids", unique_ids)
@@ -295,16 +292,12 @@ def make_split(mask_generator, path_dict, split="train"):
     f = open("meta_data/scannetv2_%s.txt"%(split))
     scan_name_list = sorted(f.readlines())
     skip = True
-    for scan_name_index, scan_name in enumerate(scan_name_list):
+    for scan_name_index, scan_name in enumerate(tqdm(scan_name_list)):
         cur_parameter = {}
         cur_parameter["scan_name_index"] = scan_name_index
         cur_parameter["scan_name"] = scan_name
         cur_parameter["path_dict"] = path_dict
         cur_parameter["scan_num"] = len(scan_name_list)
-        # if scan_name[:-1] == "scene0305_00":
-        #     skip = False
-        # if not skip:
-        #     process_cur_scan(cur_parameter, mask_generator)
         process_cur_scan(cur_parameter, mask_generator, split)
 
 
@@ -319,11 +312,6 @@ def main():
                 }
 
     splits = ["train", "val"]
-    # splits = ['train']
-    # splits = ["val"]
-
-    # mask_generator = SamAutomaticMaskGenerator(build_sam(
-    #     checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
     
     mask_generator = FastSAM('../FastSAM-x.pt')
     

@@ -15,8 +15,6 @@ model = dict(
     voxel_size=0.02,
     num_classes=num_instance_classes_eval,
     query_thr=0.5,
-    weights=[0.33,0.33,0.33],
-    thresh=0.55,
     backbone=dict(
         type='Res16UNet34C',
         in_channels=3,
@@ -26,17 +24,16 @@ model = dict(
             conv1_kernel_size=5,
             bn_momentum=0.02)),
     memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(0,1,2,3)),
-    # memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(2,3)),
     pool=dict(type='GeoAwarePooling', channel_proj=96),
     decoder=dict(
         type='ScanNetMixQueryDecoder',
         num_layers=3,
         share_attn_mlp=False, 
         share_mask_mlp=False,
-        temporal_attn=False, # TODO: to be extended
+        temporal_attn=False,
         # the last mp_mode should be "P"
         cross_attn_mode=["", "SP", "SP", "SP"], 
-        mask_pred_mode=["P", "P", "P", "P"],
+        mask_pred_mode=["SP", "SP", "P", "P"],
         num_instance_queries=0,
         num_semantic_queries=0,
         num_instance_classes=num_instance_classes,

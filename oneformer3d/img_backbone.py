@@ -86,7 +86,7 @@ class MyPredictor(SegmentationPredictor):
 class FastSAM_Backbone(BaseModule):
     def __init__(self):
         super(FastSAM_Backbone, self).__init__()
-        self.yolo = MyYOLO('/home/ubuntu/xxw/OS3D/FastSAM/FastSAM-x.pt')
+        self.yolo = MyYOLO('./data/FastSAM-x.pt')
         self.yolo.model.model = self.yolo.model.model[:15]
 
     def init_weights(self):
