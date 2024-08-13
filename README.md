@@ -29,16 +29,6 @@ We provide the checkpoints for quick reproduction of the results reported in the
 |  OS3D-E  |  Online |   FastSAM   | 43.4 |  65.4 |  80.9 |   20+88   |   [model](https://cloud.tsinghua.edu.cn/f/7578d7e3d6764f6a93ee/?dl=1)   |
 
 **Dataset transfer results from ScanNet200 to SceneNN and 3RScan:**
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-wa1i{font-weight:bold;text-align:center;vertical-align:middle}
-.tg .tg-b2st{background-color:#F2F3F5;font-weight:bold;text-align:center;vertical-align:middle}
-.tg .tg-nrix{text-align:center;vertical-align:middle}
-</style>
 <table class="tg"><thead>
   <tr>
     <th class="tg-b2st" rowspan="2">Method</th>
@@ -114,29 +104,15 @@ We provide the checkpoints for quick reproduction of the results reported in the
 </tbody></table>
 
 **3D instance segmentation results on ScanNet dataset:**
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-9wq8{border-color:inherit;text-align:center;vertical-align:middle}
-.tg .tg-gabo{background-color:#F2F3F5;border-color:inherit;font-weight:bold;text-align:center;vertical-align:middle}
-.tg .tg-uzvj{border-color:inherit;font-weight:bold;text-align:center;vertical-align:middle}
-</style>
 <table class="tg"><thead>
   <tr>
     <th class="tg-gabo" rowspan="2">Method</th>
     <th class="tg-gabo" rowspan="2">Type</th>
     <th class="tg-gabo" colspan="3">ScanNet</th>
-    <th class="tg-gabo" colspan="3">SceneNN</th>
     <th class="tg-gabo" rowspan="2">FPS</th>
     <th class="tg-gabo" rowspan="2">Download</th>
   </tr>
   <tr>
-    <th class="tg-uzvj">AP</th>
-    <th class="tg-uzvj">AP50</th>
-    <th class="tg-uzvj">AP25</th>
     <th class="tg-uzvj">AP</th>
     <th class="tg-uzvj">AP50</th>
     <th class="tg-uzvj">AP25</th>
@@ -150,9 +126,6 @@ We provide the checkpoints for quick reproduction of the results reported in the
     <td class="tg-9wq8">81.3</td>
     <td class="tg-9wq8">--</td>
     <td class="tg-9wq8">--</td>
-    <td class="tg-9wq8">--</td>
-    <td class="tg-9wq8">--</td>
-    <td class="tg-9wq8">--</td>
   </tr>
   <tr>
     <td class="tg-9wq8">Oneformer3D</td>
@@ -160,9 +133,6 @@ We provide the checkpoints for quick reproduction of the results reported in the
     <td class="tg-9wq8">59.3</td>
     <td class="tg-9wq8">78.8</td>
     <td class="tg-9wq8">86.7</td>
-    <td class="tg-9wq8">--</td>
-    <td class="tg-9wq8">--</td>
-    <td class="tg-9wq8">--</td>
     <td class="tg-9wq8">--</td>
     <td class="tg-9wq8">--</td>
   </tr>
@@ -174,9 +144,6 @@ We provide the checkpoints for quick reproduction of the results reported in the
     <td class="tg-9wq8">--</td>
     <td class="tg-9wq8">--</td>
     <td class="tg-9wq8">--</td>
-    <td class="tg-9wq8">--</td>
-    <td class="tg-9wq8">--</td>
-    <td class="tg-9wq8">--</td>
   </tr>
   <tr>
     <td class="tg-9wq8">TD3D-MA</td>
@@ -184,21 +151,15 @@ We provide the checkpoints for quick reproduction of the results reported in the
     <td class="tg-9wq8">39.0</td>
     <td class="tg-9wq8">60.5</td>
     <td class="tg-9wq8">71.3</td>
-    <td class="tg-9wq8">26.0</td>
-    <td class="tg-9wq8">42.8</td>
-    <td class="tg-9wq8">59.2</td>
     <td class="tg-9wq8">3.5</td>
     <td class="tg-9wq8">--</td>
   </tr>
   <tr>
     <td class="tg-9wq8">OS3D-E</td>
     <td class="tg-9wq8">online</td>
-    <td class="tg-9wq8">34.1</td>
-    <td class="tg-9wq8">51.8</td>
-    <td class="tg-9wq8">67.4</td>
-    <td class="tg-9wq8">21.9</td>
-    <td class="tg-9wq8">34.4</td>
-    <td class="tg-9wq8">45.5</td>
+    <td class="tg-9wq8">41.6</td>
+    <td class="tg-9wq8">60.1</td>
+    <td class="tg-9wq8">75.6</td>
     <td class="tg-9wq8">10</td>
     <td class="tg-9wq8"><a href='https://cloud.tsinghua.edu.cn/f/1eeff1152a5f4d4989da/?dl=1'>model</td>
   </tr>
