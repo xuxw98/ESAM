@@ -109,11 +109,11 @@ We provide the checkpoints for quick reproduction of the results reported in the
   </tr>
   <tr>
     <th class="tg-uzvj">AP</th>
-    <th class="tg-uzvj">AP50</th>
-    <th class="tg-uzvj">AP25</th>
+    <th class="tg-uzvj">AP@50</th>
+    <th class="tg-uzvj">AP@25</th>
     <th class="tg-uzvj">AP</th>
-    <th class="tg-uzvj">AP50</th>
-    <th class="tg-uzvj">AP25</th>
+    <th class="tg-uzvj">AP@50</th>
+    <th class="tg-uzvj">AP@25</th>
   </tr></thead>
 <tbody>
   <tr>
@@ -189,6 +189,12 @@ We provide the checkpoints for quick reproduction of the results reported in the
     <td class="tg-nrix"><a href=https://cloud.tsinghua.edu.cn/f/4c2dd1559e854f48be76/?dl=1>model</a></td>
   </tr>
 </tbody></table>
+
+**Open-Vocabulary 3D instance segmentation results on ScanNet200 dataset:**
+| Method |  AP  | AP@50 | AP@25 |
+|:------:|:----:|:-----:|:-----:|
+|  SAI3D |  9.6 |  14.7 |  19.0 |
+|  ESAM  | **13.7** |  **19.2** |  **23.9** |
 
 ## Acknowledgement
 We thank a lot for the flexible codebase of [Oneformer3D](https://github.com/oneformer3d/oneformer3d) and [Online3D](https://github.com/xuxw98/Online3D), as well as the valuable datasets provided by [ScanNet](https://github.com/ScanNet/ScanNet), [SceneNN](https://github.com/hkust-vgd/scenenn) and [3RScan](https://github.com/WaldJohannaU/3RScan).
