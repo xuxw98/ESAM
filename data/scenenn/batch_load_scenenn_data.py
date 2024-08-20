@@ -115,7 +115,7 @@ def export_one_scan(scan_name,
     # 存为json文件
     if not os.path.exists('mesh_segs'):
         os.makedirs('mesh_segs')
-    with open(f'mesh_segs/{scan_name}.json', 'w') as f:
+    with open(f'mesh_segs/{scan_name}.segs.json', 'w') as f:
         json.dump(segs_dict, f)
     
     np.save(f'{output_filename_prefix}_sp_label.npy', superpoints)

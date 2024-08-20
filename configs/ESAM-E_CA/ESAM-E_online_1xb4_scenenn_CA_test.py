@@ -8,11 +8,12 @@ num_instance_classes = 1
 num_semantic_classes = 200
 num_instance_classes_eval = 1
 use_bbox = True
+voxel_size = 0.02
 
 model = dict(
     type='ScanNet200MixFormer3D_Online',
     data_preprocessor=dict(type='Det3DDataPreprocessor_'),
-    voxel_size=0.02,
+    voxel_size=voxel_size,
     num_classes=num_instance_classes_eval,
     query_thr=0.5,
     backbone=dict(
@@ -24,17 +25,16 @@ model = dict(
             conv1_kernel_size=5,
             bn_momentum=0.02)),
     memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(0,1,2,3)),
-    # memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(2,3)),
     pool=dict(type='GeoAwarePooling', channel_proj=96),
     decoder=dict(
         type='ScanNetMixQueryDecoder',
         num_layers=3,
         share_attn_mlp=False, 
         share_mask_mlp=False,
-        temporal_attn=False, # TODO: to be extended
+        temporal_attn=False,
         # the last mp_mode should be "P"
         cross_attn_mode=["", "SP", "SP", "SP"], 
-        mask_pred_mode=["P", "P", "P", "P"],
+        mask_pred_mode=["SP", "SP", "P", "P"],
         num_instance_queries=0,
         num_semantic_queries=0,
         num_instance_classes=num_instance_classes,
@@ -51,7 +51,7 @@ model = dict(
         fix_attention=True,
         objectness_flag=False,
         bbox_flag=use_bbox),
-    merge_head=dict(type='MergeHead', in_channels=256, out_channels=256),
+    merge_head=dict(type='MergeHead', in_channels=256, out_channels=256, norm='layer'),
     merge_criterion=dict(type='ScanNetMergeCriterion_Fast', tmp=True, p2s=False),
     criterion=dict(
         type='ScanNetMixedCriterion',
@@ -76,12 +76,12 @@ model = dict(
             fix_dice_loss_weight=True,
             iter_matcher=True,
             fix_mean_loss=True)),
-    train_cfg=dict(),
+    train_cfg=None,
     test_cfg=dict(
         # TODO: a larger topK may be better
         topk_insts=20,
         inscat_topk_insts=100,
-        inst_score_thr=0.3, # 0.3
+        inst_score_thr=0.3,
         pan_score_thr=0.5,
         npoint_thr=100,
         obj_normalization=True,
@@ -91,9 +91,8 @@ model = dict(
         stuff_classes=[0, 1],
         merge_type='learnable_online'))
 
-# TODO: complete the dataset
 dataset_type = 'ScanNet200SegMVDataset_'
-data_root = 'data/3RScan-mv/'
+data_root = 'data/scenenn-mv/'
 
 # floor and chair are changed
 class_names = [
@@ -163,8 +162,7 @@ test_pipeline = [
         with_seg_3d=True,
         with_sp_mask_3d=True,
         with_rec=True,
-        dataset_type = '3RScan'),
-    dict(type='SwapChairAndFloorWithRec'),
+        dataset_type='scenenn'),
     dict(type='PointSegClassMappingWithRec'),
     dict(
         type='MultiScaleFlipAug3D',
@@ -186,12 +184,14 @@ test_pipeline = [
     dict(type='Pack3DDetInputs_Online', keys=['points', 'sp_pts_mask'])
 ]
 
+train_dataloader = None
+
 val_dataloader = dict(
     # persistent_workers=False,
     # num_workers=0,
     dataset=dict(
         type=dataset_type,
-        ann_file='3rscan_mv_oneformer3d_infos_val.pkl',
+        ann_file='scenenn_mv_oneformer3d_infos_val.pkl',
         data_root=data_root,
         metainfo=dict(classes=class_names),
         pipeline=test_pipeline,

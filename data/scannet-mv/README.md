@@ -1,5 +1,5 @@
 ## Prepare ScanNet-MV Dataset
-**Step1:** Link '2D' and '3D' folders to this directory, namely `OS3D/data/scannet-mv`.
+**Step1:** Link '2D' and '3D' folders to this directory, namely `ESAM/data/scannet-mv`.
 You should get the following directory structure:
 ```
 scannet-mv
@@ -32,7 +32,7 @@ python load_scannet_mv_data_fast.py
 
 It will take around 1~2 day to finish the data preparation and get several new folders, including `axis_align_matrix`, `instance_mask`, `points`, `semantic_mask`, `super_points`.
 
-**Step3:** Go back to the root directory of OS3D, and generate .pkl file by running:
+**Step3:** Go back to the root directory of ESAM, and generate .pkl file by running:
 ```bash
 python tools/create_data.py scannet_mv --root-path ./data/scannet-mv --out-dir ./data/scannet-mv --extra-tag scannet_mv
 ```

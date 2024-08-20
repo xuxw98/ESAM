@@ -1,5 +1,5 @@
 ## Prepare ScanNet200-SV Dataset
-**Step1:** Link '2D' and '3D' folders to this directory, namely `OS3D/data/scannet200-sv`.
+**Step1:** Link '2D' and '3D' folders to this directory, namely `ESAM/data/scannet200-sv`.
 You should get the following directory structure:
 ```
 scannet200-sv
@@ -32,7 +32,7 @@ python load_scannet_sv_data_v2_fast.py
 
 It will take around 0.5~1 day to finish the data preparation and get a new folder `scannet_sv_instance_data`.
 
-**Step3:** Go back to the root directory of OS3D, and generate .pkl file by running:
+**Step3:** Go back to the root directory of ESAM, and generate .pkl file by running:
 ```bash
 python tools/create_data.py scannet200_sv --root-path ./data/scannet200-sv --out-dir ./data/scannet200-sv --extra-tag scannet200_sv
 ```

@@ -8,12 +8,11 @@ num_instance_classes = 1
 num_semantic_classes = 200
 num_instance_classes_eval = 1
 use_bbox = True
-voxel_size = 0.02
 
 model = dict(
     type='ScanNet200MixFormer3D_Online',
     data_preprocessor=dict(type='Det3DDataPreprocessor_'),
-    voxel_size=voxel_size,
+    voxel_size=0.02,
     num_classes=num_instance_classes_eval,
     query_thr=0.5,
     backbone=dict(
@@ -31,7 +30,7 @@ model = dict(
         num_layers=3,
         share_attn_mlp=False, 
         share_mask_mlp=False,
-        temporal_attn=False,
+        temporal_attn=False, # TODO: to be extended
         # the last mp_mode should be "P"
         cross_attn_mode=["", "SP", "SP", "SP"], 
         mask_pred_mode=["SP", "SP", "P", "P"],
@@ -51,7 +50,7 @@ model = dict(
         fix_attention=True,
         objectness_flag=False,
         bbox_flag=use_bbox),
-    merge_head=dict(type='MergeHead', in_channels=256, out_channels=256, norm='layer'),
+    merge_head=dict(type='MergeHead', in_channels=256, out_channels=256),
     merge_criterion=dict(type='ScanNetMergeCriterion_Fast', tmp=True, p2s=False),
     criterion=dict(
         type='ScanNetMixedCriterion',
@@ -81,7 +80,7 @@ model = dict(
         # TODO: a larger topK may be better
         topk_insts=20,
         inscat_topk_insts=100,
-        inst_score_thr=0.3,
+        inst_score_thr=0.25,
         pan_score_thr=0.5,
         npoint_thr=100,
         obj_normalization=True,
@@ -92,7 +91,7 @@ model = dict(
         merge_type='learnable_online'))
 
 dataset_type = 'ScanNet200SegMVDataset_'
-data_root = 'data/scannet200-mv_fast/'
+data_root = 'data/scannet200-mv/'
 
 # floor and chair are changed
 class_names = [
@@ -190,10 +189,10 @@ train_pipeline = [
         type='ElasticTransfrom',
         gran=[6, 20],
         mag=[40, 160],
-        voxel_size=voxel_size,
+        voxel_size=0.02,
         p=0.5,
         with_rec=use_bbox),
-    dict(type='BboxCalculation' if use_bbox else 'NoOperation', voxel_size=voxel_size),
+    dict(type='BboxCalculation' if use_bbox else 'NoOperation', voxel_size=0.02),
     dict(
         type='Pack3DDetInputs_Online',
         keys=[
@@ -216,7 +215,8 @@ test_pipeline = [
         with_mask_3d=True,
         with_seg_3d=True,
         with_sp_mask_3d=True,
-        with_rec=True),
+        with_rec=True,
+        dataset_type='scannet200'),
     dict(type='SwapChairAndFloorWithRec'),
     dict(type='PointSegClassMappingWithRec'),
     dict(
@@ -316,8 +316,8 @@ default_hooks = dict(
         save_best=['all_ap_50%'],
         rule='greater'))
 
-# TODO: choose a best mixformer3d_sv
-load_from = 'work_dirs/OS3D-E_sv_1xb4_scannet200/epoch_128.pth'
+# TODO: choose a best ESAM_sv
+load_from = 'work_dirs/ESAM_sv_scannet200_CA/epoch_128.pth'
 
 # training schedule for 1x
 train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=128, val_interval=128)

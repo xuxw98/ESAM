@@ -5,8 +5,8 @@ The code is tested with Python == 3.8, Pytorch == 1.13.1, CUDA == 11.6, mmdet3d 
 
 **Step 2**: Create a new conda environment and activate it:
 ```bash
-conda create -n os3d python=3.8
-conda activate os3d
+conda create -n ESAM python=3.8
+conda activate ESAM
 ```
 **Step 3**: Install PyTorch following [official instructions](https://pytorch.org/get-started/locally/), e.g.
 ```bash
@@ -30,4 +30,6 @@ pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --inst
 ```bash
 pip install -r requirements.txt
 ```
+
+
 

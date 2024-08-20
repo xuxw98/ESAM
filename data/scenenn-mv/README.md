@@ -1,7 +1,7 @@
 ## Prepare SceneNN-MV Dataset
 **Step1:** The processed SceneNN data can be downloaded from the repo of [Online3D](https://cloud.tsinghua.edu.cn/d/641cd2b7a123467d98a6/). Run `cat SceneNN.tar.* > SceneNN.tar` to merge the files. Then unzip 'SceneNN.tar' to get 'SceneNN' folder.
 
-Link 'SceneNN' folder to this directory, namely  `OS3D/data/scenenn-mv`. You should get the following directory structure:
+Link 'SceneNN' folder to this directory, namely  `ESAM/data/scenenn-mv`. You should get the following directory structure:
 ```
 scenenn-mv
 ├── SceneNN
@@ -31,7 +31,7 @@ python load_scenenn_mv_data.py
 
 Then you will get several new folders, including `instance_mask`, `points`, `semantic_mask`, `super_points`.
 
-**Step3:** Go back to the root directory of OS3D, and generate .pkl file by running:
+**Step3:** Go back to the root directory of ESAM, and generate .pkl file by running:
 ```bash
 python tools/create_data.py scenenn_mv --root-path ./data/scenenn-mv --out-dir ./data/scenenn-mv --extra-tag scenenn_mv
 ```

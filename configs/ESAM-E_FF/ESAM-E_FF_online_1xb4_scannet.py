@@ -7,9 +7,10 @@ custom_imports = dict(imports=['oneformer3d'])
 num_instance_classes = 18
 num_semantic_classes = 20
 num_instance_classes_eval = 18
+use_bbox = True
 
 model = dict(
-    type='ScanNet200MixFormer3D_FF',
+    type='ScanNet200MixFormer3D_FF_Online',
     data_preprocessor=dict(type='Det3DDataPreprocessor_'),
     voxel_size=0.02,
     num_classes=num_instance_classes_eval,
@@ -23,15 +24,17 @@ model = dict(
             dilations=[1, 1, 1, 1],
             conv1_kernel_size=5,
             bn_momentum=0.02)),
+    memory=dict(type='MultilevelMemory', in_channels=[32, 64, 128, 256], queue=-1, vmp_layer=(0,1,2,3)),
     pool=dict(type='GeoAwarePooling', channel_proj=96),
     decoder=dict(
         type='ScanNetMixQueryDecoder',
         num_layers=3,
         share_attn_mlp=False, 
         share_mask_mlp=False,
+        temporal_attn=False, # TODO: to be extended
         # the last mp_mode should be "P"
         cross_attn_mode=["", "SP", "SP", "SP"], 
-        mask_pred_mode=["P", "P", "P", "P"],
+        mask_pred_mode=["SP", "SP", "P", "P"],
         num_instance_queries=0,
         num_semantic_queries=0,
         num_instance_classes=num_instance_classes,
@@ -46,7 +49,10 @@ model = dict(
         iter_pred=True,
         attn_mask=True,
         fix_attention=True,
-        objectness_flag=False),
+        objectness_flag=False,
+        bbox_flag=use_bbox),
+    merge_head=dict(type='MergeHead', in_channels=256, out_channels=256, norm='layer'),
+    merge_criterion=dict(type='ScanNetMergeCriterion_Fast', tmp=True, p2s=False),
     criterion=dict(
         type='ScanNetMixedCriterion',
         num_semantic_classes=num_semantic_classes,
@@ -72,23 +78,22 @@ model = dict(
             fix_mean_loss=True)),
     train_cfg=dict(),
     test_cfg=dict(
-        topk_insts=100,
-        inst_score_thr=0.0,
+        # TODO: a larger topK may be better
+        topk_insts=20,
+        inscat_topk_insts=100,
+        inst_score_thr=0.3,
         pan_score_thr=0.5,
         npoint_thr=100,
         obj_normalization=True,
         sp_score_thr=0.4,
         nms=True,
         matrix_nms_kernel='linear',
-        stuff_classes=[0, 1]))
+        stuff_classes=[0, 1],
+        merge_type='learnable_online'))
 
-dataset_type = 'ScanNetSegDataset_'
-data_root = 'data/scannet-sv_fast/'
-data_prefix = dict(
-    pts='points',
-    pts_instance_mask='instance_mask',
-    pts_semantic_mask='semantic_mask',
-    sp_pts_mask='super_points')
+# TODO: complete the dataset
+dataset_type = 'ScanNetSegMVDataset_'
+data_root = 'data/scannet-mv_fast/'
 
 # floor and chair are changed
 class_names = [
@@ -109,20 +114,23 @@ color_std = (
 # dataset settings
 train_pipeline = [
     dict(
-        type='LoadPointsFromFile',
+        type='LoadAdjacentDataFromFile',
         coord_type='DEPTH',
         shift_height=False,
         use_color=True,
         load_dim=6,
-        use_dim=[0, 1, 2, 3, 4, 5]),
-    dict(
-        type='LoadAnnotations3D_',
+        use_dim=[0, 1, 2, 3, 4, 5],
+        num_frames=8,
+        num_sample=20000,
         with_bbox_3d=False,
         with_label_3d=False,
         with_mask_3d=True,
         with_seg_3d=True,
-        with_sp_mask_3d=True),
-    dict(type='PointSegClassMapping'),
+        with_sp_mask_3d=True,
+        with_rec=use_bbox, cat_rec=use_bbox,
+        use_FF=True,
+        dataset_type = 'scannet'),
+    dict(type='PointSegClassMappingWithRec' if use_bbox else 'PointSegClassMapping'),
     dict(
         type='RandomFlip3D',
         sync_2d=False,
@@ -139,34 +147,39 @@ train_pipeline = [
         color_mean=color_mean,
         color_std=color_std),
     dict(
-        type='AddSuperPointAnnotations',
+        type='AddSuperPointAnnotations_Online',
         num_classes=num_semantic_classes,
         stuff_classes=[0, 1],
-        merge_non_stuff_cls=False),
+        merge_non_stuff_cls=False,
+        with_rec=use_bbox),
+    dict(type='BboxCalculation' if use_bbox else 'NoOperation', voxel_size=0.02),
     dict(
-        type='Pack3DDetInputs_',
+        type='Pack3DDetInputs_Online',
         keys=[
             'points', 'gt_labels_3d', 'pts_semantic_mask', 'pts_instance_mask',
-            'sp_pts_mask', 'gt_sp_masks', 'elastic_coords', 'img_path',
-        ],
+            'sp_pts_mask', 'gt_sp_masks', 'elastic_coords', 'img_paths',
+        ] + ['gt_bboxes_3d'] if use_bbox else [],
         dataset_type='scannet')
 ]
 test_pipeline = [
     dict(
-        type='LoadPointsFromFile',
+        type='LoadAdjacentDataFromFile',
         coord_type='DEPTH',
         shift_height=False,
         use_color=True,
         load_dim=6,
-        use_dim=[0, 1, 2, 3, 4, 5]),
-    dict(
-        type='LoadAnnotations3D_',
+        use_dim=[0, 1, 2, 3, 4, 5],
+        num_frames=-1,
+        num_sample=20000,
         with_bbox_3d=False,
         with_label_3d=False,
         with_mask_3d=True,
         with_seg_3d=True,
-        with_sp_mask_3d=True),
-    dict(type='PointSegClassMapping'),
+        with_sp_mask_3d=True,
+        with_rec=True,
+        use_FF=True,
+        dataset_type = 'scannet'),
+    dict(type='PointSegClassMappingWithRec'),
     dict(
         type='MultiScaleFlipAug3D',
         img_scale=(1333, 800),
@@ -178,36 +191,37 @@ test_pipeline = [
                 color_mean=color_mean,
                 color_std=color_std),
             dict(
-                type='AddSuperPointAnnotations',
+                type='AddSuperPointAnnotations_Online',
                 num_classes=num_semantic_classes,
                 stuff_classes=[0, 1],
-                merge_non_stuff_cls=False),
+                merge_non_stuff_cls=False,
+                with_rec=True),
         ]),
-    dict(type='Pack3DDetInputs_', keys=['points', 'sp_pts_mask', 'img_path',],
+    dict(type='Pack3DDetInputs_Online', keys=['points', 'sp_pts_mask', 'img_paths'] ,
          dataset_type='scannet')
 ]
 
 train_dataloader = dict(
-    batch_size=16,
+    batch_size=4,
     num_workers=6,
     # persistent_workers=False,
     # num_workers=0,
     dataset=dict(
         type=dataset_type,
-        ann_file='scannet_sv_oneformer3d_infos_train.pkl',
+        ann_file='scannet_mv_oneformer3d_infos_train.pkl',
         data_root=data_root,
-        data_prefix=data_prefix,
         metainfo=dict(classes=class_names),
         pipeline=train_pipeline,
         ignore_index=num_semantic_classes,
         scene_idxs=None,
         test_mode=False))
 val_dataloader = dict(
+    # persistent_workers=False,
+    # num_workers=0,
     dataset=dict(
         type=dataset_type,
-        ann_file='scannet_sv_oneformer3d_infos_val.pkl',
+        ann_file='scannet_mv_oneformer3d_infos_val.pkl',
         data_root=data_root,
-        data_prefix=data_prefix,
         metainfo=dict(classes=class_names),
         pipeline=test_pipeline,
         ignore_index=num_semantic_classes,
@@ -251,7 +265,8 @@ default_hooks = dict(
         save_best=['all_ap_50%'],
         rule='greater'))
 
-load_from = 'work_dirs/tmp/mask3d_scannet200.pth'
+# TODO: choose a best ESAM-E_FF_sv
+load_from = 'work_dirs/ESAM-E_FF_sv_scannet/epoch_128.pth'
 
 # training schedule for 1x
 train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=128, val_interval=128)

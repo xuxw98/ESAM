@@ -1,7 +1,7 @@
 ## Prepare 3RScan Dataset
 **Step1:** Download 3RScan dataset from [here](https://github.com/WaldJohannaU/3RScan?tab=readme-ov-file). We test our model on the test split, which contain 46 scenes. Then put downloaded scenes in a folder named '3RScan' and rename the scenes as ['000', '001', ..., '045'].
 
-Link '3RScan' folder to this directory, namely  `OS3D/data/3RScan`. You should get the following directory structure:
+Link '3RScan' folder to this directory, namely  `ESAM/data/3RScan`. You should get the following directory structure:
 ```
 3RScan
 ├── 3RScan
@@ -29,7 +29,7 @@ python batch_load_3rscan_data.py
 
 Then you will get a new folder named `3rscan_instance_data`.
 
-**Step3:** Go back to the root directory of OS3D, and generate .pkl file by running:
+**Step3:** Go back to the root directory of ESAM, and generate .pkl file by running:
 ```bash
 python tools/create_data.py 3rscan --root-path ./data/3RScan --out-dir ./data/3RScan --extra-tag 3rscan
 ```

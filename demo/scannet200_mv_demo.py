@@ -153,7 +153,7 @@ def main():
     parser = ArgumentParser()
     scene_name = "scene0131_00"
     parser.add_argument('--scene-idx', type=str, default="%s" % scene_name, help='single scene index')
-    parser.add_argument('--config', type=str, default="configs/mixformer3d_online_1xb4_scannet200.py", help='Config file')
+    parser.add_argument('--config', type=str, default="configs/mixformer3d_online_scannet200.py", help='Config file')
     parser.add_argument('--checkpoint', type=str, default="work_dirs/mf3d_scannet200_online_128e_final/epoch_128.pth", help='Checkpoint file')
     parser.add_argument(
         '--device', default='cuda:0', help='Device used for inference')

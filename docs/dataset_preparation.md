@@ -1,5 +1,8 @@
 ## Dataset Preparation
 
+Please refer to [segmentator](https://github.com/Karbo123/segmentator.git) to get mesh segmentator.
+You should clone the repository in the folder 'data', and it will be imported in 'batch_load_scannet_data.py' for generating mesh segmentation results.
+
 #### ScanNet200: 
 
 For ScanNet200, please follow [here](../data/scannet200/README.md).

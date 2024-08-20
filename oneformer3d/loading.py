@@ -47,9 +47,6 @@ class LoadAnnotations3D_(LoadAnnotations3D):
             mmengine.check_file_exist(sp_pts_mask_path)
             sp_pts_mask = np.fromfile(
                 sp_pts_mask_path, dtype=np.int64)
-        if len(sp_pts_mask) % 20000 != 0:
-            results['fg_bg_marks'] = sp_pts_mask[-1]
-            sp_pts_mask = sp_pts_mask[:-1]
         results['sp_pts_mask'] = sp_pts_mask
 
         # 'eval_ann_info' will be passed to evaluator
@@ -293,11 +290,7 @@ class LoadAdjacentDataFromFile(BaseTransform):
             sp_pts_mask = [np.fromfile(sp_pts_mask_path, dtype=np.int64)
                  for sp_pts_mask_path in sp_pts_mask_paths]
         sp_pts_mask = np.array(sp_pts_mask)
-        if sp_pts_mask.shape[1] != 20000:
-            results['fg_bg_marks'] = sp_pts_mask[:,-1]
-            sp_pts_mask = np.concatenate(sp_pts_mask[:,:-1], axis=0)
-        else:
-            sp_pts_mask = np.concatenate(sp_pts_mask, axis=0)
+        sp_pts_mask = np.concatenate(sp_pts_mask, axis=0)
 
         results['sp_pts_mask'] = sp_pts_mask
         # 'eval_ann_info' will be passed to evaluator
@@ -405,10 +398,7 @@ class LoadAdjacentDataFromFile(BaseTransform):
                 img_file_paths = [img_file_paths[idx] for idx in choose_seq]
                 results['img_paths'] = img_file_paths
                 poses = [poses[idx] for idx in choose_seq]
-                if self.dataset_type == 'scenenn':
-                    results['poses'] = [(self.transform_matrix @ pose) for pose in poses]
-                else:
-                    results['poses'] = poses
+                results['poses'] = poses
 
         points = self._load_points(pts_file_paths)
         points = points.reshape(-1, self.load_dim)
@@ -481,6 +471,8 @@ class LoadAdjacentDataFromFile(BaseTransform):
             results['img'] = imgs
             results['img_paths'] = img_file_paths
             results['poses'] = poses
+            if self.dataset_type == 'scenenn':  
+                results['poses'] = [(self.transform_matrix @ pose) for pose in poses]
         results['num_frames'] = len(pts_file_paths) if self.num_frames == -1 else self.num_frames
         results['num_sample'] = self.num_sample
         return results
