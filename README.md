@@ -6,12 +6,18 @@
 > [Xiuwei Xu](https://xuxw98.github.io/), Huangxing Chen, [Linqing Zhao](https://scholar.google.com/citations?user=ypxt5UEAAAAJ&hl=zh-CN&oi=ao), [Ziwei Wang](https://ziweiwangthu.github.io/), [Jie Zhou](https://scholar.google.com/citations?user=6a79aPwAAAAJ&hl=en&authuser=1), [Jiwen Lu](http://ivg.au.tsinghua.edu.cn/Jiwen_Lu/)
 
 
+## News
+- [2024/8/22]: Code and demo released.
+
+
 ## Demo
+Bedroom:
+![demo](./assets/demo2.gif)
 
-![demo](./images/demo1.gif)
+Office:
+![demo](./assets/demo1.gif)
 
-![demo](./images/demo2.gif)
-
+Demos are a little bit large; please wait a moment to load them. Welcome to the home page for more complete demos and detailed introductions.
 
 ## Getting Started
 For environment setup and dataset preparation, please follow:
@@ -23,7 +29,7 @@ For training and evaluation, please follow:
 
 
 ## Main Results
-We provide the checkpoints for quick reproduction of the results reported in the paper.
+We provide the checkpoints for quick reproduction of the results reported in the paper. We have made some modifications to further improve the performance so the results below are higher than ones in our paper. Check [changelog](./docs/changelog.md) for more details.
 
 **Class-agnostic 3D instance segmentation results on ScanNet200 dataset:**
 
@@ -203,10 +209,6 @@ We provide the checkpoints for quick reproduction of the results reported in the
 |  SAI3D |  9.6 |  14.7 |  19.0 |
 |  ESAM  | **13.7** |  **19.2** |  **23.9** |
 
-## Updates:
-Visit [changelog](./docs/changelog.md) for more details. To summarize the main differences are:
-* Mask refine strategy
-* Merging metric
 
 ## Acknowledgement
 We thank a lot for the flexible codebase of [Oneformer3D](https://github.com/oneformer3d/oneformer3d) and [Online3D](https://github.com/xuxw98/Online3D), as well as the valuable datasets provided by [ScanNet](https://github.com/ScanNet/ScanNet), [SceneNN](https://github.com/hkust-vgd/scenenn) and [3RScan](https://github.com/WaldJohannaU/3RScan).
