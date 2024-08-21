@@ -265,8 +265,8 @@ default_hooks = dict(
         save_best=['all_ap_50%'],
         rule='greater'))
 
-# TODO: choose a best ESAM-E_FF_sv
-load_from = 'work_dirs/ESAM-E_FF_sv_scannet/epoch_128.pth'
+# TODO: choose a best ESAM-E+FF_sv
+load_from = 'work_dirs/ESAM-E+FF_sv_scannet/epoch_128.pth'
 
 # training schedule for 1x
 train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=128, val_interval=128)

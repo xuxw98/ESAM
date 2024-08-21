@@ -92,19 +92,19 @@ CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/ESAM-E/ESAM-E_online_scanne
 CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/ESAM-E/ESAM-E_online_scannet.py work_dirs/ESAM-E_online_scannet/epoch_128.pth --work-dir work_dirs/ESAM-E_online_scannet/
 ```
 
-#### ESAM-E_FF:
-Train and evaluate ESAM-E_FF on ScanNet-SV:
+#### ESAM-E+FF:
+Train and evaluate ESAM-E+FF on ScanNet-SV:
 
 ```
-CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/ESAM-E_FF/ESAM-E_FF_sv_scannet.py --work-dir work_dirs/ESAM-E_FF_sv_scannet/
-CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/ESAM-E_FF/ESAM-E_FF_sv_scannet.py work_dirs/ESAM-E_FF_sv_scannet/epoch_128.pth --work-dir work_dirs/ESAM-E_FF_sv_scannet/
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/ESAM-E+FF/ESAM-E+FF_sv_scannet.py --work-dir work_dirs/ESAM-E+FF_sv_scannet/
+CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/ESAM-E+FF/ESAM-E+FF_sv_scannet.py work_dirs/ESAM-E+FF_sv_scannet/epoch_128.pth --work-dir work_dirs/ESAM-E+FF_sv_scannet/
 ```
 
-Train and evaluate ESAM-E_FF on ScanNet-MV:
+Train and evaluate ESAM-E+FF on ScanNet-MV:
 
 ```
-CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/ESAM-E_FF/ESAM-E_FF_online_scannet.py --work-dir work_dirs/ESAM-E_FF_online_scannet/
-CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/ESAM-E_FF/ESAM-E_FF_online_scannet.py work_dirs/ESAM-E_FF_online_scannet/epoch_128.pth --work-dir work_dirs/ESAM-E_FF_online_scannet/
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/ESAM-E+FF/ESAM-E+FF_online_scannet.py --work-dir work_dirs/ESAM-E+FF_online_scannet/
+CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/ESAM-E+FF/ESAM-E+FF_online_scannet.py work_dirs/ESAM-E+FF_online_scannet/epoch_128.pth --work-dir work_dirs/ESAM-E+FF_online_scannet/
 ```
 
 ### Open-Vocabulary 3D instance segmentation:

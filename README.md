@@ -177,7 +177,7 @@ We provide the checkpoints for quick reproduction of the results reported in the
     <td class="tg-9wq8"><a href=https://cloud.tsinghua.edu.cn/f/1eeff1152a5f4d4989da/?dl=1>model</a></td>
   </tr>
   <tr>
-    <td class="tg-nrix">ESAM-E_FF</td>
+    <td class="tg-nrix">ESAM-E+FF</td>
     <td class="tg-nrix">online</td>
     <td class="tg-wa1i"><b>42.6</b></td>
     <td class="tg-wa1i"><b>61.9</b></td>
