@@ -212,6 +212,11 @@ We provide the checkpoints for quick reproduction of the results reported in the
 |  ESAM  | **13.7** |  **19.2** |  **23.9** |
 
 
+## Acknowledgement
+We thank a lot for the flexible codebase of [Oneformer3D](https://github.com/oneformer3d/oneformer3d) and [Online3D](https://github.com/xuxw98/Online3D), as well as the valuable datasets provided by [ScanNet](https://github.com/ScanNet/ScanNet), [SceneNN](https://github.com/hkust-vgd/scenenn) and [3RScan](https://github.com/WaldJohannaU/3RScan).
+
+
+## Citation
 ```
 @article{xu2024esam, 
       title={EmbodiedSAM: Online Segment Any 3D Thing in Real Time}, 
@@ -220,6 +225,3 @@ We provide the checkpoints for quick reproduction of the results reported in the
       year={2024}
 }
 ```
-
-## Acknowledgement
-We thank a lot for the flexible codebase of [Oneformer3D](https://github.com/oneformer3d/oneformer3d) and [Online3D](https://github.com/xuxw98/Online3D), as well as the valuable datasets provided by [ScanNet](https://github.com/ScanNet/ScanNet), [SceneNN](https://github.com/hkust-vgd/scenenn) and [3RScan](https://github.com/WaldJohannaU/3RScan).
