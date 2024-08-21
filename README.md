@@ -11,10 +11,10 @@
 
 
 ## Demo
-Bedroom:
+### Bedroom:
 ![demo](./assets/demo2.gif)
 
-Office:
+### Office:
 ![demo](./assets/demo1.gif)
 
 Demos are a little bit large; please wait a moment to load them. Welcome to the home page for more complete demos and detailed introductions.
