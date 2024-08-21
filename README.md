@@ -21,6 +21,12 @@ In this work, we presented ESAM, an efficient framework that leverages vision fo
 
 Demos are a little bit large; please wait a moment to load them. Welcome to the home page for more complete demos and detailed introductions.
 
+
+## Method 
+
+Method Pipeline:
+![overview](./assets/pipeline.png)
+
 ## Getting Started
 For environment setup and dataset preparation, please follow:
 * [Installation](./docs/installation.md)
