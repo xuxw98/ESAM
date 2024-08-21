@@ -1,10 +1,17 @@
-# ESAM:  **Embodied Segment Anything**
+# EmbodiedSAM: Online Segment Any 3D Thing in Real Time
+### [Paper](https://arxiv.org/abs/xxxx.xxxxx) | [Project Page](https://xuxw98.github.io/ESAM/) | [Video](https://cloud.tsinghua.edu.cn/f/f75279f89bf64720b8ec/?dl=1)
 
-## Introduction
+> EmbodiedSAM: Online Segment Any 3D Thing in Real Time, arXiv 2024
 
-This repo contains PyTorch implementation for paper ESAM: Embodied Segment Anything based on [MMDetection3D](https://github.com/open-mmlab/mmdetection3d).
+> [Xiuwei Xu](https://xuxw98.github.io/), Huangxing Chen, [Linqing Zhao](https://scholar.google.com/citations?user=ypxt5UEAAAAJ&hl=zh-CN&oi=ao), [Ziwei Wang](https://ziweiwangthu.github.io/), [Jie Zhou](https://scholar.google.com/citations?user=6a79aPwAAAAJ&hl=en&authuser=1), [Jiwen Lu](http://ivg.au.tsinghua.edu.cn/Jiwen_Lu/)
 
-We propose a VFM-assisted 3D instance segmentation framework namely ESAM, which exploits the power of SAM to online segment anything in 3D scenes with high accuracy and fast speed.
+
+## Demo
+
+![demo](./images/demo1.gif)
+
+![demo](./images/demo2.gif)
+
 
 ## Getting Started
 For environment setup and dataset preparation, please follow:
