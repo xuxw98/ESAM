@@ -1,9 +1,9 @@
 # EmbodiedSAM: Online Segment Any 3D Thing in Real Time
 ### [Paper](https://arxiv.org/abs/xxxx.xxxxx) | [Project Page](https://xuxw98.github.io/ESAM/) | [Video](https://cloud.tsinghua.edu.cn/f/f75279f89bf64720b8ec/?dl=1)
 
-> EmbodiedSAM: Online Segment Any 3D Thing in Real Time, arXiv 2024
-
+> EmbodiedSAM: Online Segment Any 3D Thing in Real Time  
 > [Xiuwei Xu](https://xuxw98.github.io/), Huangxing Chen, [Linqing Zhao](https://scholar.google.com/citations?user=ypxt5UEAAAAJ&hl=zh-CN&oi=ao), [Ziwei Wang](https://ziweiwangthu.github.io/), [Jie Zhou](https://scholar.google.com/citations?user=6a79aPwAAAAJ&hl=en&authuser=1), [Jiwen Lu](http://ivg.au.tsinghua.edu.cn/Jiwen_Lu/)
+
 
 In this work, we presented ESAM, an efficient framework that leverages vision foundation models for <b>online</b>, <b>real-time</b>, <b>fine-grained</b>, <b>generalized</b> and <b>open-vocabulary</b> 3D instance segmentation. 
 
