@@ -1,5 +1,5 @@
 # EmbodiedSAM: Online Segment Any 3D Thing in Real Time
-### [Paper](https://arxiv.org/abs/xxxx.xxxxx) | [Project Page](https://xuxw98.github.io/ESAM/) | [Video](https://cloud.tsinghua.edu.cn/f/f75279f89bf64720b8ec/?dl=1)
+### [Paper](https://arxiv.org/abs/2408.11811) | [Project Page](https://xuxw98.github.io/ESAM/) | [Video](https://cloud.tsinghua.edu.cn/f/f75279f89bf64720b8ec/?dl=1)
 
 > EmbodiedSAM: Online Segment Any 3D Thing in Real Time  
 > [Xiuwei Xu](https://xuxw98.github.io/), Huangxing Chen, [Linqing Zhao](https://scholar.google.com/citations?user=ypxt5UEAAAAJ&hl=zh-CN&oi=ao), [Ziwei Wang](https://ziweiwangthu.github.io/), [Jie Zhou](https://scholar.google.com/citations?user=6a79aPwAAAAJ&hl=en&authuser=1), [Jiwen Lu](http://ivg.au.tsinghua.edu.cn/Jiwen_Lu/)
@@ -227,7 +227,7 @@ We thank a lot for the flexible codebase of [Oneformer3D](https://github.com/one
 @article{xu2024esam, 
       title={EmbodiedSAM: Online Segment Any 3D Thing in Real Time}, 
       author={Xiuwei Xu and Huangxing Chen and Linqing Zhao and Ziwei Wang and Jie Zhou and Jiwen Lu},
-      journal={arXiv preprint arXiv:xxxx},
+      journal={arXiv preprint arXiv:2408.11811},
       year={2024}
 }
 ```
