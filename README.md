@@ -218,6 +218,11 @@ We provide the checkpoints for quick reproduction of the results reported in the
 |  ESAM  | **13.7** |  **19.2** |  **23.9** |
 
 
+## TODO List
+- [x] Release code and checkpoints.
+- [ ] Release the demo code to directly run ESAM on streaming RGB-D video.
+
+
 ## Acknowledgement
 We thank a lot for the flexible codebase of [Oneformer3D](https://github.com/oneformer3d/oneformer3d) and [Online3D](https://github.com/xuxw98/Online3D), as well as the valuable datasets provided by [ScanNet](https://github.com/ScanNet/ScanNet), [SceneNN](https://github.com/hkust-vgd/scenenn) and [3RScan](https://github.com/WaldJohannaU/3RScan).
 
