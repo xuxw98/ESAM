@@ -255,7 +255,6 @@ def process_cur_scan(cur_scan, mask_generator, split):
         # Get superpoints
         # TODO: set other_ins_num as 10-->8
         points_without_seg = unaligned_xyz[group_ids == -1]
-        fg_bg_mark = group_ids.max() + 1 
         if len(points_without_seg) < 20:
             other_ins = np.zeros(len(points_without_seg), dtype=np.int64) + group_ids.max() + 1
         else:
@@ -268,9 +267,6 @@ def process_cur_scan(cur_scan, mask_generator, split):
             for i, ids in enumerate(unique_ids):
                 new_group_ids[group_ids == ids] = i
             group_ids = new_group_ids
-            
-        # Add fg_bg_mark to the end, so that the foreground and background can be distinguished
-        group_ids = np.append(group_ids, fg_bg_mark)
         
         # Format output, no need for boxes, only ins/sem mask is OK
         group_ids.astype(np.int64).tofile(
