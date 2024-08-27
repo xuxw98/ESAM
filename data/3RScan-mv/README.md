@@ -30,7 +30,7 @@ or use FastSAM instead of SAM by running:
 ```bash
 python load_3rscan_mv_data_fast.py
 ```
-
+If you use the FastSAM version, please rename this folder from `3RScan-mv` to `3RScan-mv_fast`.
 
 Then you will get several new folders, including `instance_mask`, `points`, `semantic_mask`, `super_points`.
 

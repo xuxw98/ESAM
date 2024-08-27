@@ -29,6 +29,9 @@ or use FastSAM instead of SAM by running:
 ```bash
 python load_scannet_mv_data_fast.py
 ```
+If you use the FastSAM version, please rename this folder from `scannet-mv` to `scannet-mv_fast`.
+
+Then you will get several new folders, including `axis_align_matrix`, `instance_mask`, `points`, `semantic_mask`, `super_points`.
 
 It will take around 1~2 day to finish the data preparation and get several new folders, including `axis_align_matrix`, `instance_mask`, `points`, `semantic_mask`, `super_points`.
 

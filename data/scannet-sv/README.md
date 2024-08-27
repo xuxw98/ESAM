@@ -30,6 +30,8 @@ or use FastSAM instead of SAM by running:
 python load_scannet_sv_data_v2_fast.py
 ```
 
+If you use the FastSAM version, please rename this folder from `scannet-sv` to `scannet-sv_fast`.
+
 It will take around 0.5~1 day to finish the data preparation and get a new folder `scannet_sv_instance_data`.
 
 **Step3:** Go back to the root directory of ESAM, and generate .pkl file by running:
