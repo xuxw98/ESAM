@@ -93,7 +93,7 @@ model = dict(
 
 # TODO: complete the dataset
 dataset_type = 'ScanNetSegMVDataset_'
-data_root = 'data/scenenn-mv/'
+data_root = 'data/scenenn-mv_fast/'
 
 # floor and chair are changed
 class_names = [
