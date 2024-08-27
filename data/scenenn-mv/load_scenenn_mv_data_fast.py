@@ -14,9 +14,49 @@ from segment_anything import build_sam, SamAutomaticMaskGenerator
 import pdb
 import torch
 import pointops
-from load_scannet_data import export
+import scannet_utils
+from fastsam import FastSAM
 from tqdm import tqdm
 
+def export(mesh_file, xml_file, label_map_file):
+    label_map = scannet_utils.read_label_mapping(label_map_file, label_from='nyu40class', label_to='nyu40id')
+    # breakpoint()
+    mesh, label_txt, ins_label, aligned_bboxes, object_id_to_label = scannet_utils.read_mesh_vertices_rgb(mesh_file, xml_file)
+    if mesh.shape[0] > 1000000:
+        choice = np.random.choice(mesh.shape[0], 1000000, replace=False)
+        mesh = mesh[choice]
+        label_txt = label_txt[choice]
+        ins_label = ins_label[choice]
+    sem_label = []
+    for i in range(label_txt.shape[0]):
+        if label_txt[i] == 'unknown':
+            sem_label.append(0)
+            ins_label[i] = 0
+        elif label_txt[i] == 'otherprop':
+            sem_label.append(40)
+        else:
+            try:
+                sem_label.append(label_map[label_txt[i]])
+            except:
+                sem_label.append(0)
+                ins_label[i] = 0
+    sem_label = np.array(sem_label)
+    instance_bboxes = extract_bbox(mesh, ins_label)
+    return mesh, ins_label, sem_label, instance_bboxes, label_map, object_id_to_label
+
+def extract_bbox(mesh, ins_label):
+    num_instances = len(np.unique(ins_label)) - 1
+    instance_bboxes = np.zeros((num_instances, 6))
+    for obj_id in range(1, num_instances + 1):
+        obj_pc = mesh[ins_label == obj_id, 0:3]
+        if len(obj_pc) == 0:
+            continue
+        xyz_min = np.min(obj_pc, axis=0)
+        xyz_max = np.max(obj_pc, axis=0)
+        bbox = np.concatenate([(xyz_min + xyz_max) / 2.0, xyz_max - xyz_min])
+        # NOTE: this assumes obj_id is in 1,2,3,.,,,.NUM_INSTANCES
+        instance_bboxes[obj_id - 1, :] = bbox
+    return instance_bboxes
 
 def make_intrinsic(fx, fy, mx, my):
     intrinsic = np.eye(4)
@@ -71,22 +111,14 @@ def convert_from_uvd(u, v, depth, intr, pose):
     xyz[:3,:] /= xyz[3,:] 
     return xyz[:3, :].T
 
-def export_one_scan(scan_name):
-    mesh_file = os.path.join('3RScan', scan_name, 'labels.instances.annotated.v2.ply')
-    agg_file = os.path.join('3RScan', scan_name, 'semseg.v2.json')
-    seg_file = os.path.join('3RScan', scan_name, 'mesh.refined.0.010000.segs.v2.json')
-    meta_file = os.path.join('3RScan', scan_name, 'sequence', '_info.txt')
-    aligned_mesh_vertices, instance_labels, bboxes, label_map, object_id_to_label = \
-        export(mesh_file, agg_file, seg_file, meta_file, './3RScan.v2 Semantic Classes - Mapping.tsv', scannet200=False)
-        
-    # change label for class-agnostic setting
-    for key in object_id_to_label.keys():
-        if label_map[object_id_to_label[key]] != 1 and label_map[object_id_to_label[key]] != 2:
-            object_id_to_label[key] = 'chair'
-            
-    # bbox_instance_labels = np.arange(1,bboxes.shape[0]+1)
-    bbox_instance_labels = np.array(list(object_id_to_label.keys()))
-    return aligned_mesh_vertices, instance_labels, label_map, object_id_to_label, bboxes, bbox_instance_labels
+def export_one_scan(path_prefix, scan_name):    
+    mesh_file = os.path.join(path_prefix, scan_name, scan_name + '.ply')
+    xml_file = os.path.join(path_prefix, scan_name, scan_name + '.xml')
+    aligned_mesh_vertices, instance_labels, semantic_labels, bboxes, label_map, object_id_to_label = \
+        export(mesh_file, xml_file, './scannetv2-labels.combined.tsv')
+    bbox_instance_labels = np.arange(1,bboxes.shape[0]+1)
+
+    return aligned_mesh_vertices, instance_labels, semantic_labels, label_map, object_id_to_label, bboxes, bbox_instance_labels
 
 
 def select_points_in_bbox(xyz, ins, bboxes, bbox_instance_labels):
@@ -117,24 +149,20 @@ def select_points_in_bbox(xyz, ins, bboxes, bbox_instance_labels):
     object_num = len(unique_ins) - int(0 in unique_ins)
     return ins, object_num
 
-def read_info(info_path):
-    with open(info_path, 'r') as file:
-        file_content = file.read()
-    key_value_pairs = file_content.split('\n')[:-1]
-    data_dict = {}
-    for pair in key_value_pairs:
-        key, value = pair.split(' = ')  # 使用等号分割键值对
-        data_dict[key.strip()] = value.strip()
-        
-    colorIntrinsic = data_dict['m_calibrationColorIntrinsic']
-    colorIntrinsic = colorIntrinsic.split(' ')
-    colorIntrinsic = [float(x) for x in colorIntrinsic]
-    data_dict['m_calibrationColorIntrinsic'] = np.array(colorIntrinsic).reshape((4, 4))
-    depthIntrinsic = data_dict['m_calibrationDepthIntrinsic']
-    depthIntrinsic = depthIntrinsic.split(' ')
-    depthIntrinsic = [float(x) for x in depthIntrinsic]
-    data_dict['m_calibrationDepthIntrinsic'] = np.array(depthIntrinsic).reshape((4, 4))
-    return data_dict
+def format_result(result):
+    annotations = []
+    n = len(result.masks.data)
+    for i in range(n):
+        annotation = {}
+        mask = result.masks.data[i] == 1.0
+
+        annotation['id'] = i
+        annotation['segmentation'] = mask.cpu().numpy()
+        annotation['bbox'] = result.boxes.data[i]
+        annotation['score'] = result.boxes.conf[i]
+        annotation['area'] = annotation['segmentation'].sum()
+        annotations.append(annotation)
+    return annotations
 
 def process_cur_scan(cur_scan, mask_generator):
     scan_name_index = cur_scan["scan_name_index"]
@@ -145,79 +173,53 @@ def process_cur_scan(cur_scan, mask_generator):
 
     scan_path = os.path.join(path_prefix,scan_name)
 
-    # axis_align_matrix_path = os.path.join(AXIS_ALIGN_MATRIX_PATH, "%s"%(scan_name),"%s.txt"%(scan_name))
-    # lines = open(axis_align_matrix_path).readlines()
-    # for line in lines:
-    #     if 'axisAlignment' in line:
-    #         axis_align_matrix = [float(x) \
-    #             for x in line.rstrip().strip('axisAlignment = ').split(' ')]
-    #         break
-    # axis_align_matrix = np.array(axis_align_matrix).reshape((4,4))
+    unify_dim = (640, 480)
+    unify_intrinsic = adjust_intrinsic(make_intrinsic(544.47329,544.47329,320,240), [640,480], unify_dim)
 
-    info_path = os.path.join(scan_path, 'sequence','_info.txt')
-    info = read_info(info_path)
-    
-    unify_dim = (224, 172)
-    unify_intrinsic = adjust_intrinsic(info['m_calibrationDepthIntrinsic'], unify_dim, unify_dim)
-        
     # Sort string. 0 20 40 60 80 100 120 ...
-    all_files_list = os.listdir(scan_path+'/sequence')
-    depth_map_list = []
-    POSE_txt_list = []
-    rgb_map_list = []
-
-    for file_name in all_files_list:
-        if file_name.endswith('.depth.pgm'):
-            depth_map_list.append(file_name)
-        elif file_name.endswith('.pose.txt'):
-            POSE_txt_list.append(file_name)
-        elif file_name.endswith('.color.jpg'):
-            rgb_map_list.append(file_name)
-    POSE_txt_list = sorted(POSE_txt_list, key=lambda x: int(x[6:-9]))
-    rgb_map_list = sorted(rgb_map_list, key=lambda x: int(x[6:-10]))
-    depth_map_list = sorted(depth_map_list, key=lambda x: int(x[6:-10]))
-    # POSE_txt_list = sorted(os.listdir(os.path.join(scan_path, 'pose')), key=lambda s: int(s[:-4]))
-    # rgb_map_list = sorted(os.listdir(os.path.join(scan_path, 'color')), key=lambda s: int(s[:-4]))
-    # depth_map_list = sorted(os.listdir(os.path.join(scan_path, 'depth')), key=lambda s: int(s[:-4]))
-
-    poses = [load_matrix_from_txt(os.path.join(scan_path, 'sequence', path)) for path in POSE_txt_list]
-    aligned_poses = poses.copy()
+    POSE_list = sorted(os.listdir(os.path.join(scan_path, 'pose')), key=lambda s: int(s[:-4]))
+    rgb_map_list = sorted(os.listdir(os.path.join(scan_path, 'image')), key=lambda s: int(s[5:-4]))[:len(POSE_list)]
+    depth_map_list = sorted(os.listdir(os.path.join(scan_path, 'depth')), key=lambda s: int(s[5:-4]))[:len(POSE_list)]
+    
+    poses = [np.load(os.path.join(scan_path, 'pose', path)) for path in POSE_list]
 
     os.makedirs("points/%s" % scan_name, exist_ok=True)
     os.makedirs("super_points/%s" % scan_name, exist_ok=True)
     os.makedirs("semantic_mask/%s" % scan_name, exist_ok=True)
     os.makedirs("instance_mask/%s" % scan_name, exist_ok=True)
 
-    aligned_mesh_vertices, instance_labels, label_map, object_id_to_label, \
-        aligned_bboxes, bbox_instance_labels = export_one_scan(scan_name)
+    aligned_mesh_vertices, instance_labels, semantic_labels, label_map, object_id_to_label, \
+        aligned_bboxes, bbox_instance_labels = export_one_scan(path_prefix, scan_name)
 
     for frame_i, (rgb_map_name, \
         depth_map_name, \
-        pose, \
-        aligned_pose) \
-        in enumerate(zip(rgb_map_list, depth_map_list, poses, aligned_poses)):
-        # assert frame_i * 20 == int(rgb_map_name[:-4])
-        # set interval=5
-        if frame_i % 5 != 0:
+        pose) \
+        in enumerate(zip(rgb_map_list, depth_map_list, poses)):
+        assert frame_i * 40 + 1 == int(rgb_map_name[5:-4])
+        # set interval=40
+        # if frame_i % 2 != 0:
         # if frame_i % 2 == 0:
-            continue
+            # continue
 
-        depth_map = cv2.imread(os.path.join(scan_path, 'sequence', depth_map_name), -1)
-        color_map = cv2.imread(os.path.join(scan_path, 'sequence', rgb_map_name))
+        depth_map = cv2.imread(os.path.join(scan_path, 'depth', depth_map_name), -1)
+        color_map = cv2.imread(os.path.join(scan_path, 'image', rgb_map_name))
         color_map = cv2.cvtColor(color_map, cv2.COLOR_BGR2RGB)
-        color_map = cv2.resize(color_map, depth_map.shape[::-1])
-        color_map = cv2.rotate(color_map, cv2.ROTATE_90_CLOCKWISE)
+
+        img_path = os.path.join(scan_path, 'image', rgb_map_name)
         # SAM-->super point
-        masks = mask_generator.generate(color_map)
+        everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=224, conf=0.1, iou=0.9,)
+        try:
+            masks = format_result(everything_result[0])
+        except:
+            everything_result = mask_generator(img_path, device='cuda', retina_masks=True, imgsz=224, conf=0.1, iou=0.7,)
+            masks = format_result(everything_result[0])
+
         masks = sorted(masks, key=(lambda x: x['area']), reverse=True)
-        color_map = cv2.rotate(color_map, cv2.ROTATE_90_COUNTERCLOCKWISE)
         group_ids = np.full((color_map.shape[0], color_map.shape[1]), -1, dtype=int)
         num_masks = len(masks)
         group_counter = 0
         for i in range(num_masks):
             mask_now = masks[i]["segmentation"]
-            # 将mask_now逆时针旋转90
-            mask_now = cv2.rotate(mask_now.astype(int), cv2.ROTATE_90_COUNTERCLOCKWISE).astype(bool)
             group_ids[mask_now] = group_counter
             group_counter += 1
 
@@ -241,14 +243,12 @@ def process_cur_scan(cur_scan, mask_generator):
         rgb = color_map[valid]
 
         # For MV: downsample to 20000
-        aligned_xyz = convert_from_uvd(ww_ind, hh_ind, depth_map, unify_intrinsic, aligned_pose)
-        if np.isnan(aligned_xyz).any():
-            continue
         unaligned_xyz = convert_from_uvd(ww_ind, hh_ind, depth_map, unify_intrinsic, pose)
         unaligned_xyz = np.concatenate([unaligned_xyz, rgb], axis=-1)
-        xyz_all = np.concatenate([unaligned_xyz, aligned_xyz, group_ids.reshape(-1,1)], axis=-1)
+        xyz_all = np.concatenate([unaligned_xyz, group_ids.reshape(-1,1)], axis=-1)
         xyz_all = random_sampling(xyz_all, 20000)
-        unaligned_xyz, aligned_xyz, group_ids = xyz_all[:, :6], xyz_all[:, 6:9], xyz_all[:, 9]
+        unaligned_xyz, group_ids = xyz_all[:, :6], xyz_all[:, 6]
+        aligned_xyz = unaligned_xyz[:,:3]
 
         # Get instance label (ins) from 3D annotation by KNN
         target_coord = torch.tensor(aligned_xyz).cuda().contiguous().float()
@@ -262,8 +262,7 @@ def process_cur_scan(cur_scan, mask_generator):
         # ins[mask_dis] = 0
         # further denoise
         ins, object_num = select_points_in_bbox(aligned_xyz, ins, aligned_bboxes, bbox_instance_labels)
-        # if object_num <= 2:
-        #     continue
+        print('object_num: ',object_num)
 
         # Get sem from ins
         sem = np.zeros_like(ins, dtype=np.uint32)
@@ -274,10 +273,10 @@ def process_cur_scan(cur_scan, mask_generator):
         # Get superpoints
         # TODO: set other_ins_num as 10-->8
         points_without_seg = unaligned_xyz[group_ids == -1]
-        if len(points_without_seg) < 8:
+        if len(points_without_seg) < 20:
             other_ins = np.zeros(len(points_without_seg), dtype=np.int64) + group_ids.max() + 1
         else:
-            other_ins = KMeans(n_clusters=8, n_init=10).fit(points_without_seg).labels_ + group_ids.max() + 1
+            other_ins = KMeans(n_clusters=20, n_init=10).fit(points_without_seg).labels_ + group_ids.max() + 1
         group_ids[group_ids == -1] = other_ins
         unique_ids = np.unique(group_ids)
         if group_ids.max() != len(unique_ids) - 1:
@@ -288,13 +287,13 @@ def process_cur_scan(cur_scan, mask_generator):
         
         # Format output, no need for boxes, only ins/sem mask is OK
         group_ids.astype(np.int64).tofile(
-            os.path.join("super_points/%s" % scan_name, "%s.bin" % (frame_i)))
+            os.path.join("super_points/%s" % scan_name, "%s.bin" % (40*frame_i+1)))
         unaligned_xyz.astype(np.float32).tofile(
-            os.path.join("points/%s" % scan_name, "%s.bin" % (frame_i)))
+            os.path.join("points/%s" % scan_name, "%s.bin" % (40*frame_i+1)))
         sem.astype(np.int64).tofile(
-            os.path.join("semantic_mask/%s" % scan_name, "%s.bin" % (frame_i)))
+            os.path.join("semantic_mask/%s" % scan_name, "%s.bin" % (40*frame_i+1)))
         ins.astype(np.int64).tofile(
-            os.path.join("instance_mask/%s" % scan_name, "%s.bin" % (frame_i)))
+            os.path.join("instance_mask/%s" % scan_name, "%s.bin" % (40*frame_i+1)))
 
 
 def make_split(mask_generator, path_prefix, scan_name_list):
@@ -310,16 +309,15 @@ def make_split(mask_generator, path_prefix, scan_name_list):
         cur_parameter["scan_name"] = scan_name
         cur_parameter["path_prefix"] = path_prefix
         cur_parameter["scan_num"] = len(scan_name_list)
-        
+
         process_cur_scan(cur_parameter, mask_generator)
 
 
 def main():
-    PATH_PREFIX = "./3RScan"
+    PATH_PREFIX = "./SceneNN"
     scene_name_list = sorted(os.listdir(PATH_PREFIX))
+    mask_generator = FastSAM('../FastSAM-x.pt')
 
-    mask_generator = SamAutomaticMaskGenerator(build_sam(
-        checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
     
     make_split(mask_generator, PATH_PREFIX, scene_name_list)
 

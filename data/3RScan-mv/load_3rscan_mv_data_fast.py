@@ -15,6 +15,7 @@ import pdb
 import torch
 import pointops
 from load_scannet_data import export
+from fastsam import FastSAM
 from tqdm import tqdm
 
 
@@ -136,6 +137,21 @@ def read_info(info_path):
     data_dict['m_calibrationDepthIntrinsic'] = np.array(depthIntrinsic).reshape((4, 4))
     return data_dict
 
+def format_result(result):
+    annotations = []
+    n = len(result.masks.data)
+    for i in range(n):
+        annotation = {}
+        mask = result.masks.data[i] == 1.0
+
+        annotation['id'] = i
+        annotation['segmentation'] = mask.cpu().numpy()
+        annotation['bbox'] = result.boxes.data[i]
+        annotation['score'] = result.boxes.conf[i]
+        annotation['area'] = annotation['segmentation'].sum()
+        annotations.append(annotation)
+    return annotations
+
 def process_cur_scan(cur_scan, mask_generator):
     scan_name_index = cur_scan["scan_name_index"]
     scan_name = cur_scan["scan_name"]
@@ -208,7 +224,12 @@ def process_cur_scan(cur_scan, mask_generator):
         color_map = cv2.resize(color_map, depth_map.shape[::-1])
         color_map = cv2.rotate(color_map, cv2.ROTATE_90_CLOCKWISE)
         # SAM-->super point
-        masks = mask_generator.generate(color_map)
+        everything_result = mask_generator(color_map, device='cuda', retina_masks=True, imgsz=640, conf=0.1, iou=0.9,)
+        try:
+            masks = format_result(everything_result[0])
+        except:
+            everything_result = mask_generator(color_map, device='cuda', retina_masks=True, imgsz=640, conf=0.1, iou=0.7,)
+            masks = format_result(everything_result[0])
         masks = sorted(masks, key=(lambda x: x['area']), reverse=True)
         color_map = cv2.rotate(color_map, cv2.ROTATE_90_COUNTERCLOCKWISE)
         group_ids = np.full((color_map.shape[0], color_map.shape[1]), -1, dtype=int)
@@ -262,8 +283,6 @@ def process_cur_scan(cur_scan, mask_generator):
         # ins[mask_dis] = 0
         # further denoise
         ins, object_num = select_points_in_bbox(aligned_xyz, ins, aligned_bboxes, bbox_instance_labels)
-        # if object_num <= 2:
-        #     continue
 
         # Get sem from ins
         sem = np.zeros_like(ins, dtype=np.uint32)
@@ -274,10 +293,10 @@ def process_cur_scan(cur_scan, mask_generator):
         # Get superpoints
         # TODO: set other_ins_num as 10-->8
         points_without_seg = unaligned_xyz[group_ids == -1]
-        if len(points_without_seg) < 8:
+        if len(points_without_seg) < 20:
             other_ins = np.zeros(len(points_without_seg), dtype=np.int64) + group_ids.max() + 1
         else:
-            other_ins = KMeans(n_clusters=8, n_init=10).fit(points_without_seg).labels_ + group_ids.max() + 1
+            other_ins = KMeans(n_clusters=20, n_init=10).fit(points_without_seg).labels_ + group_ids.max() + 1
         group_ids[group_ids == -1] = other_ins
         unique_ids = np.unique(group_ids)
         if group_ids.max() != len(unique_ids) - 1:
@@ -318,9 +337,8 @@ def main():
     PATH_PREFIX = "./3RScan"
     scene_name_list = sorted(os.listdir(PATH_PREFIX))
 
-    mask_generator = SamAutomaticMaskGenerator(build_sam(
-        checkpoint="../sam_vit_h_4b8939.pth").to(device="cuda"))
-    
+    mask_generator = FastSAM('../FastSAM-x.pt')
+
     make_split(mask_generator, PATH_PREFIX, scene_name_list)
 
 

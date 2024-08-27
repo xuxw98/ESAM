@@ -9,18 +9,13 @@ from scipy import stats
 import os
 from plyfile import PlyData,PlyElement
 from scipy import stats
-import open3d as o3d
-from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from segment_anything import build_sam, SamAutomaticMaskGenerator
-import trimesh
-import multiprocessing
 import pdb
-import imageio
-import skimage.transform as sktf 
 import torch
 import pointops
 import scannet_utils
+from tqdm import tqdm
 def export(mesh_file, xml_file, label_map_file):
     label_map = scannet_utils.read_label_mapping(label_map_file, label_from='nyu40class', label_to='nyu40id')
     # breakpoint()
@@ -283,7 +278,7 @@ def make_split(mask_generator, path_prefix, scan_name_list):
     os.makedirs("instance_mask", exist_ok=True)
     os.makedirs("axis_align_matrix", exist_ok=True)
 
-    for scan_name_index, scan_name in enumerate(scan_name_list):
+    for scan_name_index, scan_name in enumerate(tqdm(scan_name_list)):
         cur_parameter = {}
         cur_parameter["scan_name_index"] = scan_name_index
         cur_parameter["scan_name"] = scan_name

@@ -28,6 +28,11 @@ scenenn-mv
 ```bash
 python load_scenenn_mv_data.py
 ```
+or use FastSAM instead of SAM by running:
+```bash
+python load_scenenn_mv_data_fast.py
+```
+
 
 Then you will get several new folders, including `instance_mask`, `points`, `semantic_mask`, `super_points`.
 
