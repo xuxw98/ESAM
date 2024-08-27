@@ -92,7 +92,7 @@ model = dict(
         merge_type='learnable_online'))
 
 dataset_type = 'ScanNet200SegMVDataset_'
-data_root = 'data/3RScan-mv/'
+data_root = 'data/3RScan-mv_fast/'
 
 # floor and chair are changed
 class_names = [
