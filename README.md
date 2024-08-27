@@ -9,8 +9,8 @@ In this work, we presented ESAM, an efficient framework that leverages vision fo
 
 
 ## News
-- [2024/8/22]: Code and demo released.
 - [2024/8/27]: Fix some bugs.
+- [2024/8/22]: Code and demo released.
 
 
 ## Demo
