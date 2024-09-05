@@ -27,6 +27,7 @@ pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --inst
 * Please follow [here](https://github.com/CASIA-IVA-Lab/FastSAM/blob/main/README.md) for installation of FastSAM. Then download the checkpoint for [FastSAM](https://drive.google.com/file/d/1m1sjY4ihXBU1fZXdQ-Xdj-mDltW-2Rqv/view?usp=sharing) and put it in the folder 'data'.
 
 **Step 7**: Download backbone checkpoint:
+
 We follow [Oneformer3D](https://github.com/filaPro/oneformer3d) to initialize the backbone from [Mask3D](https://github.com/JonasSchult/Mask3D) checkpoint. It should be [downloaded](https://github.com/oneformer3d/oneformer3d/releases/download/v1.0/mask3d_scannet200.pth) and put to `work_dirs/tmp` before training.
 
 **Step 8**: Install other dependencies:
