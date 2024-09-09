@@ -45,8 +45,6 @@ scannet
 ├── scannet_utils.py
 ├── README.md
 ├── scans
-├── scans_test
-├── scannet_instance_data
 ├── points
 │   ├── xxxxx.bin
 ├── instance_mask
@@ -55,13 +53,7 @@ scannet
 │   ├── xxxxx.bin
 ├── super_points
 │   ├── xxxxx.bin
-├── seg_info
-│   ├── train_label_weight.npy
-│   ├── train_resampled_scene_idxs.npy
-│   ├── val_label_weight.npy
-│   ├── val_resampled_scene_idxs.npy
 ├── scannet_oneformer3d_infos_train.pkl
 ├── scannet_oneformer3d_infos_val.pkl
-├── scannet_oneformer3d_infos_test.pkl
 
 ```

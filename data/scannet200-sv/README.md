@@ -1,5 +1,10 @@
 ## Prepare ScanNet200-SV Dataset
 **Step1:** Link '2D' and '3D' folders to this directory, namely `ESAM/data/scannet200-sv`.
+```
+ln -s /path/to/2D ./2D
+ln -s /path/to/scans ./3D
+```
+
 You should get the following directory structure:
 ```
 scannet200-sv
