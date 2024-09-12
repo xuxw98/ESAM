@@ -30,7 +30,8 @@ pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --inst
 
 We follow [Oneformer3D](https://github.com/filaPro/oneformer3d) to initialize the backbone from [Mask3D](https://github.com/JonasSchult/Mask3D) checkpoint. It should be [downloaded](https://github.com/oneformer3d/oneformer3d/releases/download/v1.0/mask3d_scannet200.pth) and put to `work_dirs/tmp` before training.
 
-**Step 8**: Install other dependencies:
+**Step 8**: Follow [SAM3D](https://github.com/Pointcept/SegmentAnything3D) to install pointops.
+**Step 9**: Install other dependencies:
 ```bash
 pip install -r requirements.txt
 ```
