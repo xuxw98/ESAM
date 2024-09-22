@@ -1,6 +1,5 @@
 ## Prepare 3RScan-MV Dataset
-**Step1:** Download 3RScan dataset from [here](https://github.com/WaldJohannaU/3RScan?tab=readme-ov-file). We test our model on the test split, which contain 46 scenes. Then put downloaded scenes in a folder named '3RScan' and rename the scenes as ['000', '001', ..., '045'].
-
+**Step1:** 
 Link '3RScan' folder to this directory, namely  `ESAM/data/3RScan-mv`. You should get the following directory structure:
 ```
 3RScan-mv

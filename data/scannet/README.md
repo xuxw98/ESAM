@@ -1,4 +1,6 @@
-### Prepare ScanNet Data for Indoor Detection or Segmentation Task
+## Prepare ScanNet Dataset
+
+### Part1: 3D reconstructed data
 
 We follow the procedure in [votenet](https://github.com/facebookresearch/votenet/).
 
@@ -57,3 +59,7 @@ scannet
 ├── scannet_oneformer3d_infos_val.pkl
 
 ```
+
+### Part2: 2D data
+We follow the procedure in [Online3D](https://github.com/xuxw98/Online3D/tree/main/data/scannet-sv).
+You can refer to **step 1** to either download the processed 2D data directly or generate 2D data from the raw data.
