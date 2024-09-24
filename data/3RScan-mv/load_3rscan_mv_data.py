@@ -123,7 +123,7 @@ def read_info(info_path):
     key_value_pairs = file_content.split('\n')[:-1]
     data_dict = {}
     for pair in key_value_pairs:
-        key, value = pair.split(' = ')  # 使用等号分割键值对
+        key, value = pair.split(' = ')
         data_dict[key.strip()] = value.strip()
         
     colorIntrinsic = data_dict['m_calibrationColorIntrinsic']
@@ -262,8 +262,6 @@ def process_cur_scan(cur_scan, mask_generator):
         # ins[mask_dis] = 0
         # further denoise
         ins, object_num = select_points_in_bbox(aligned_xyz, ins, aligned_bboxes, bbox_instance_labels)
-        # if object_num <= 2:
-        #     continue
 
         # Get sem from ins
         sem = np.zeros_like(ins, dtype=np.uint32)

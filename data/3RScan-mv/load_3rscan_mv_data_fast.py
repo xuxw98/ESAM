@@ -124,7 +124,7 @@ def read_info(info_path):
     key_value_pairs = file_content.split('\n')[:-1]
     data_dict = {}
     for pair in key_value_pairs:
-        key, value = pair.split(' = ')  # 使用等号分割键值对
+        key, value = pair.split(' = ') 
         data_dict[key.strip()] = value.strip()
         
     colorIntrinsic = data_dict['m_calibrationColorIntrinsic']
@@ -237,7 +237,6 @@ def process_cur_scan(cur_scan, mask_generator):
         group_counter = 0
         for i in range(num_masks):
             mask_now = masks[i]["segmentation"]
-            # 将mask_now逆时针旋转90
             mask_now = cv2.rotate(mask_now.astype(int), cv2.ROTATE_90_COUNTERCLOCKWISE).astype(bool)
             group_ids[mask_now] = group_counter
             group_counter += 1
