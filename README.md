@@ -38,7 +38,7 @@ For training and evaluation, please follow:
 
 
 ## Main Results
-We provide the checkpoints for quick reproduction of the results reported in the paper. We have made some modifications to further improve the performance so the results below are higher than ones in our paper. Check [changelog](./docs/changelog.md) for more details.
+We provide the checkpoints for quick reproduction of the results reported in the paper.
 
 **Class-agnostic 3D instance segmentation results on ScanNet200 dataset:**
 
