@@ -1,4 +1,5 @@
 ## Changes
+Apart from hyperparameter tuning, we also make several modifications on the design.
 #### Mask refine strategy：
 In the decoder, the mask refinement process is no longer fixed at a specific level but adopts a coarse-to-fine refinement strategy. Compared to the original approach, where the initial mask and three subsequent refinements were all at the point level (P), the new strategy generates an initial mask at the superpoint (SP) level and performs the first refinement at this level. It is then converted to the point level for the following two refinements. This approach can further improve the quality of the masks.
 
