@@ -463,6 +463,7 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
                  voxel_size,
                  num_classes,
                  query_thr,
+                 map_to_rec_pcd=True,
                  backbone=None,
                  memory=None,
                  neck=None,
@@ -498,6 +499,7 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         self.query_thr = query_thr
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+        self.map_to_rec_pcd = map_to_rec_pcd
         self.init_weights()
     
     def init_weights(self):
@@ -744,7 +746,20 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
         ## Offline panoptic segmentation
         mv_sem = torch.cat([res['pts_semantic_mask'][0] for res in results])
         
-        ## Mapping to reconstructed point clouds
+        if self.use_bbox:
+            batch_data_samples[0].pred_bbox = mv_bboxes.cpu().numpy()
+        
+        # Not mapping to reconstructed point clouds, return directly for visualization
+        if not self.map_to_rec_pcd:
+            merged_result = PointData(
+                pts_semantic_mask=[mv_sem.cpu().numpy()],
+                pts_instance_mask=[mv_mask.cpu().numpy()],
+                instance_labels=mv_labels.cpu().numpy(),
+                instance_scores=mv_scores.cpu().numpy())
+            batch_data_samples[0].pred_pts_seg = merged_result
+            return batch_data_samples
+        
+        ## Mapping to reconstructed point clouds for evaluation
         mv_xyz = batch_inputs_dict['points'][0][:, :, :3].reshape(-1, 3)
         rec_xyz = torch.tensor(batch_data_samples[0].eval_ann_info['rec_xyz'])[:, :3]
         target_coord = rec_xyz.to(mv_xyz.device).contiguous().float()
@@ -765,8 +780,7 @@ class ScanNet200MixFormer3D_Online(ScanNetOneFormer3DMixin, Base3DDetector):
             merged_result = self.segment_smooth(merged_result, mv_xyz.device,
                 batch_data_samples[0].eval_ann_info['segment_ids'])
         batch_data_samples[0].pred_pts_seg = merged_result
-        if self.use_bbox:
-            batch_data_samples[0].pred_bbox = mv_bboxes.cpu().numpy()
+        
         return batch_data_samples
     
     def segment_smooth(self, results, device, segment_ids):
