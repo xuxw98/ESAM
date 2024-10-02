@@ -35,6 +35,9 @@ For environment setup and dataset preparation, please follow:
 
 For training and evaluation, please follow:
 * [Train and Evaluation](./docs/run.md)
+  
+For visualization demo, please follow:
+* [Visualization Demo](./docs/demo.md)
 
 
 ## Main Results
