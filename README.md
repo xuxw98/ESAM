@@ -9,6 +9,7 @@ In this work, we presented ESAM, an efficient framework that leverages vision fo
 
 
 ## News
+- [2024/10/01]: Demo code available at [here](https://github.com/xuxw98/ESAM/blob/main/docs/demo.md).
 - [2024/8/27]: Fix some bugs.
 - [2024/8/22]: Code and demo released.
 
@@ -224,7 +225,7 @@ We provide the checkpoints for quick reproduction of the results reported in the
 
 ## TODO List
 - [x] Release code and checkpoints.
-- [ ] Release the demo code to directly run ESAM on streaming RGB-D video.
+- [x] Release the demo code to directly run ESAM on streaming RGB-D video.
 
 ## Contributors
 Both students below contributed equally and the order is determined by random draw.
