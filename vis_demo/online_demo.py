@@ -94,7 +94,7 @@ def main():
     args = parser.parse_args()
     # model init
     model = init_model(config=args.config, checkpoint=args.checkpoint, device=args.device)
-    model.map_to_ori_pcd = False
+    model.map_to_rec_pcd = False
     # test a single scene
     result, data, img_paths = inference_detector(model=model, scene_idx=args.scene_idx)
     points = data['inputs']['points'][:,:,:3]
