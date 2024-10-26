@@ -1,9 +1,8 @@
 ## Dataset Preparation
 
-Please refer to [segmentator](https://github.com/Karbo123/segmentator.git) to get mesh segmentator.
-You should clone the repository in the folder 'data', and it will be imported in 'batch_load_scannet_data.py' for generating mesh segmentation results.
+For each dataset, you should **first process the reconstructed dataset**, which is the dataset without the `-SV` or `-MV` suffix. This dataset is used for model evaluation.
 
-For each dataset, you should first process the reconstructed dataset, which is the dataset without the `-SV` or `-MV` suffix. This dataset is used for model evaluation.
+If you want to train the entire model, you need to **further process the SV and MV data**; if you only want to perform evaluation, you only need to **process the MV data**.
 
 #### ScanNet200: 
 

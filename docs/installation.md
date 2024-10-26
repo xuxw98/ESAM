@@ -32,7 +32,12 @@ We follow [Oneformer3D](https://github.com/filaPro/oneformer3d) to initialize th
 
 **Step 8**: Follow [SAM3D](https://github.com/Pointcept/SegmentAnything3D) to install pointops.
 
-**Step 9**: Install other dependencies:
+**Step 9**: Get `segmentator` repository:
+
+Please refer to [segmentator](https://github.com/Karbo123/segmentator.git) to get mesh segmentator.
+You should clone the repository in the folder 'data', and it will be imported in 'batch_load_scannet_data.py' for generating mesh segmentation results.
+
+**Step 10**: Install other dependencies:
 ```bash
 pip install -r requirements.txt
 ```

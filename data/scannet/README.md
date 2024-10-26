@@ -1,5 +1,7 @@
 ## Prepare ScanNet Dataset
 
+The preparation of ScanNet dataset is divided into **TWO PARTS**: 3D reconstructed data and 2D data.
+
 ### Part1: 3D reconstructed data
 
 We follow the procedure in [votenet](https://github.com/facebookresearch/votenet/).

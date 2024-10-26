@@ -1,4 +1,8 @@
-### Prepare ScanNet Data for Indoor Detection or Segmentation Task
+## Prepare ScanNet200 Dataset
+
+The preparation of ScanNet200 dataset is divided into **TWO PARTS**: 3D reconstructed data and 2D data.
+
+### Part1: 3D reconstructed data
 
 We follow the procedure in [votenet](https://github.com/facebookresearch/votenet/).
 
@@ -38,7 +42,7 @@ python tools/create_data.py scannet200 --root-path ./data/scannet --out-dir ./da
 The directory structure after pre-processing should be as below
 
 ```
-scannet200
+scannet
 ├── meta_data
 ├── batch_load_scannet_data.py
 ├── load_scannet_data.py
@@ -57,3 +61,7 @@ scannet200
 ├── scannet_oneformer3d_infos_val.pkl
 
 ```
+
+### Part2: 2D data
+We follow the procedure in [Online3D](https://github.com/xuxw98/Online3D/tree/main/data/scannet-sv).
+You can refer to **step 1** to either download the processed 2D data directly or generate 2D data from the raw data.
