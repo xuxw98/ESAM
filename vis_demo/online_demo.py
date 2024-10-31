@@ -86,7 +86,7 @@ def inference_detector(model, scene_idx):
         
 def main():
     parser = ArgumentParser()
-    parser.add_argument('--scene-idx', default='scene0011_00', type=str, help='single scene index')
+    parser.add_argument('--scene_idx', default='scene0011_00', type=str, help='single scene index')
     parser.add_argument('--config', type=str, help='Config file')
     parser.add_argument('--checkpoint', type=str, help='Checkpoint file')
     parser.add_argument('--device', default='cuda:0', help='Device used for inference')
