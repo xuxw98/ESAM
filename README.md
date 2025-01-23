@@ -9,6 +9,7 @@ In this work, we presented ESAM, an efficient framework that leverages vision fo
 
 
 ## News
+- [2025/1/23]: EmbodiedSAM is accepted to ICLR 2025 with a top 2% rating!!!
 - [2024/10/01]: Demo code available at [here](https://github.com/xuxw98/ESAM/blob/main/docs/demo.md).
 - [2024/8/27]: Fix some bugs.
 - [2024/8/22]: Code and demo released.
