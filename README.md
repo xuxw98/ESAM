@@ -44,7 +44,7 @@ For visualization demo, please follow:
 
 
 ## Main Results
-We provide the checkpoints for quick reproduction of the results reported in the paper.
+We provide the checkpoints for quick reproduction of the results reported in the paper. In addition to Tsinghua Cloud, we also uploaded the checkpoints and processed data to HuggingFace. Click [HERE](https://huggingface.co/XXXCARREY/EmbodiedSAM/tree/main) for more details.
 
 **Class-agnostic 3D instance segmentation results on ScanNet200 dataset:**
 
