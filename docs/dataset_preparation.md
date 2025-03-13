@@ -4,6 +4,8 @@ For each dataset, you should **first process the reconstructed dataset**, which 
 
 If you want to train the entire model, you need to **further process the SV and MV data**; if you only want to perform evaluation, you only need to **process the MV data**.
 
+In addition to Tsinghua Cloud, we also upload the checkpoints and processed data to HuggingFace. Click [here](https://huggingface.co/XXXCARREY/EmbodiedSAM/tree/main) for more details.
+
 #### ScanNet200: 
 
 For ScanNet200, please follow [here](../data/scannet200/README.md).
