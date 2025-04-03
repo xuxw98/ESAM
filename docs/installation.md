@@ -15,10 +15,12 @@ conda install pytorch torchvision -c pytorch
 
 **Step 4**: Follow [mmdetection3d](https://github.com/open-mmlab/mmdetection3d/blob/22aaa47fdb53ce1870ff92cb7e3f96ae38d17f61/docs/en/get_started.md) to install mmcv, mmdet3d and mmdet.
 
-**Step 5**: Install MinkowskiEngine:
+**Step 5**: Follow [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine#installation) to install MinkowskiEngine. We recommend to build from source as follow.
 ```bash
 conda install openblas-devel -c anaconda
-pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --install-option="--blas_include_dirs=/opt/conda/include" --install-option="--blas=openblas"
+git clone https://github.com/NVIDIA/MinkowskiEngine.git
+cd MinkowskiEngine
+python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas=openblas
 ```
 
 **Step 6**: Install SAM & FastSAM:
@@ -30,7 +32,12 @@ pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --inst
 
 We follow [Oneformer3D](https://github.com/filaPro/oneformer3d) to initialize the backbone from [Mask3D](https://github.com/JonasSchult/Mask3D) checkpoint. It should be [downloaded](https://github.com/oneformer3d/oneformer3d/releases/download/v1.0/mask3d_scannet200.pth) and put to `work_dirs/tmp` before training.
 
-**Step 8**: Follow [SAM3D](https://github.com/Pointcept/SegmentAnything3D) to install pointops.
+**Step 8**: Install pointops.
+```bash
+cd thirdparty/pointops
+python setup.py install
+cd ../../
+```
 
 **Step 9**: Get `segmentator` repository:
 
