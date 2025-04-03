@@ -211,17 +211,20 @@ class StreamDemo:
         else:
             points = all_points[-1]
             points_color = all_points_color[-1]
-        np.save('scene_images.npy', images)
-        np.save('points.npy', points)
-        np.save('points_color.npy', points_color)        
+        save_dir = os.path.join(self.args.save_dir, self.args.data_root.split('/')[-1])
+        os.makedirs(save_dir, exist_ok=True)
+        np.save(os.path.join(save_dir, 'images.npy'), images)
+        np.save(os.path.join(save_dir, 'points.npy'), points)
+        np.save(os.path.join(save_dir, 'points_color.npy'), points_color)   
 
         # point_cloud = np.concatenate([points, points_color], axis=-1)
-        # np.savetxt('scene_point_cloud.txt', point_cloud.reshape(-1, 6))
+        # np.savetxt(os.path.join(save_dir, 'point_cloud.npy'), point_cloud.reshape(-1, 6))
     
 def main():
     parser = ArgumentParser(add_help=True)
-    # args about input
+    # args about input/output
     parser.add_argument('--data_root', type=str, default=None, help='Data root')
+    parser.add_argument('--save_dir', type=str, default='./vis_demo/results', help='Output directory')
     parser.add_argument('--interval', type=int, default='1', help='Frame processing interval (process every Nth frame)')
     parser.add_argument('--max_frames', type=int, default=10000, help='Max frame number to process')
     # args about model

@@ -96,7 +96,7 @@ class StreamDataloader:
         self.data_root = data_root
         self.counter = 0
         self.interval = interval
-        self.color_paths = sorted(os.listdir(data_root+'color'), key=lambda f:int(os.path.splitext(f)[0]))
+        self.color_paths = sorted(os.listdir(os.path.join(data_root,'color')), key=lambda f:int(os.path.splitext(f)[0]))
         self.img_nums = len(self.color_paths)
     
     def _get_item(self, i):

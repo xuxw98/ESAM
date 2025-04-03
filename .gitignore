@@ -1,4 +1,5 @@
 work_dirs 
+vis_demo/results
 
 *.pyc
 __pycache__/
