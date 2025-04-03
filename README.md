@@ -39,7 +39,7 @@ For environment setup and dataset preparation, please follow:
 For training and evaluation, please follow:
 * [Train and Evaluation](./docs/run.md)
   
-For visualization demo, please follow:
+For visualization demo or **trying your own data**, please follow:
 * [Visualization Demo](./docs/demo.md)
 
 

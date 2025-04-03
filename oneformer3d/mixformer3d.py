@@ -1139,4 +1139,141 @@ class ScanNet200MixFormer3D_FF_Online(ScanNet200MixFormer3D_Online):
         
         projected_features = self.conv(projected_features)
         return projected_features + x
+
+@MODELS.register_module()
+class ScanNet200MixFormer3D_Stream(ScanNet200MixFormer3D_Online):
+    def extract_feat(self, batch_inputs_dict, batch_data_samples):
+        """Extract features from sparse tensor.
+        """
+        # construct tensor field
+        coordinates, features = [], []
+        for i in range(len(batch_inputs_dict['points'])):
+            coordinates.append(batch_inputs_dict['points'][i][:, :3])
+            features.append(batch_inputs_dict['points'][i][:, 3:])
+        all_xyz = coordinates
+
+        coordinates, features = ME.utils.batch_sparse_collate(
+            [(c / self.voxel_size, f) for c, f in zip(coordinates, features)],
+            device=coordinates[0].device)
+        field = ME.TensorField(coordinates=coordinates, features=features)
+
+        # forward of backbone and neck
+        x = self.backbone(field.sparse(), memory=self.memory if hasattr(self,'memory') else None)
+        map_index = None; x_voxel = None
+        x = x.slice(field)
+        point_features = [torch.cat([c,f], dim=-1) for c,f in zip(all_xyz, x.decomposed_features)]
+        x = x.features
+
+        # apply scatter_mean
+        sp_pts_masks, n_super_points = [], []
+        for data_sample in batch_data_samples:
+            sp_pts_mask = data_sample.gt_pts_seg.sp_pts_mask
+            sp_pts_masks.append(sp_pts_mask + sum(n_super_points))
+            n_super_points.append(sp_pts_mask.max() + 1)
+        sp_idx = torch.cat(sp_pts_masks)
+        x, all_xyz_w = self.pool(x, sp_idx, all_xyz, with_xyz=True)
+
+        # apply cls_layer
+        features = []
+        sp_xyz_list = []
+        for i in range(len(n_super_points)):
+            begin = sum(n_super_points[:i])
+            end = sum(n_super_points[:i + 1])
+            features.append(x[begin: end, :-3])
+            sp_xyz_list.append(x[begin: end, -3:])
+        return features, point_features, all_xyz_w, sp_xyz_list, map_index, x_voxel
     
+    def predict(self, batch_inputs_dict, batch_data_samples, **kwargs):
+        """Predict results from a batch of inputs and data samples with post-
+        processing.
+        """
+        assert len(batch_data_samples) == 1
+        results, query_feats_list, sem_preds_list, sp_xyz_list, bboxes_list, cls_preds_list = [], [], [], [], [], []
+        
+        if hasattr(self, 'memory'):
+            self.memory.reset()
+
+        # t0 = time.time()
+        ## Backbone
+        x, point_features, all_xyz_w, sp_xyz, map_index, x_voxel = self.extract_feat(
+            batch_inputs_dict, batch_data_samples)
+        ## Decoder
+        super_points = ([bds.gt_pts_seg.sp_pts_mask for bds in batch_data_samples], all_xyz_w)
+        x = self.decoder(x, point_features, x, super_points)
+        ## Post-processing
+        pred_pts_seg, mapping = self.predict_by_feat(
+            x, batch_data_samples[0].gt_pts_seg.sp_pts_mask)
+        results.append(pred_pts_seg[0])
+        ## Query projector, semantic and geometric information
+        if hasattr(self, 'merge_head'):
+            query_feats = self.merge_head(x['queries'][0])
+            query_feats_list.append([query_feats[mapping[0]], query_feats[mapping[1]]])
+            sem_preds = x['cls_preds'][0]
+            sem_preds_list.append([sem_preds[mapping[0]], sem_preds[mapping[1]]])
+            sp_xyz_list.append([sp_xyz[0][mapping[0]], sp_xyz[0][mapping[1]]])
+            if self.use_bbox:
+                bbox_preds = x['bboxes'][0] # [N, 6]
+                bboxes_list.append([bbox_preds[mapping[0]], bbox_preds[mapping[1]]])
+        ## Online merging
+        if self.test_cfg.merge_type == 'learnable_online':
+            if not hasattr(self, 'online_merger'):
+                self.online_merger = OnlineMerge(self.test_cfg.inscat_topk_insts, self.use_bbox)
+            mv_mask, mv_labels, mv_scores, _, mv_bboxes = self.online_merger.merge(
+                results[-1].pop('pts_instance_mask')[0],
+                results[-1].pop('instance_labels')[0],
+                results[-1].pop('instance_scores')[0],
+                results[-1].pop('instance_queries')[0],
+                query_feats_list.pop(-1)[0],
+                sem_preds_list.pop(-1)[0],
+                sp_xyz_list.pop(-1)[0],
+                bboxes_list.pop(-1)[0] if self.use_bbox else None)
+        ## Clean. Empty cache. Only offline merging requires the whole list.
+        if self.test_cfg.merge_type == 'learnable_online':
+            torch.cuda.empty_cache()
+        #     t1 = time.time()
+        #     self.time_list.append(t1-t0)
+        # print(sum(self.time_list) / len(self.time_list))
+        ## Offline merging
+        if self.test_cfg.merge_type == 'learnable':
+            mv_mask, mv_labels, mv_scores = ins_merge_mat(
+                [res['pts_instance_mask'][0] for res in results],
+                [res['instance_labels'][0] for res in results],
+                [res['instance_scores'][0] for res in results],
+                [res['instance_queries'][0] for res in results],
+                [res[0] for res in query_feats_list],
+                [res[0] for res in sem_preds_list],
+                [res[0] for res in sp_xyz_list],
+                self.test_cfg.inscat_topk_insts)
+        elif self.test_cfg.merge_type == 'concat':
+            mv_mask, mv_labels, mv_scores = ins_cat(
+                [res['pts_instance_mask'][0] for res in results],
+                [res['instance_labels'][0] for res in results],
+                [res['instance_scores'][0] for res in results],
+                self.test_cfg.inscat_topk_insts)
+        elif self.test_cfg.merge_type == 'geometric':
+            mv_mask, mv_labels, mv_scores = ins_merge(
+                [points for points in batch_inputs_dict['points'][0]],
+                [res['pts_instance_mask'][0] for res in results],
+                [res['instance_labels'][0] for res in results],
+                [res['instance_scores'][0] for res in results],
+                [res['instance_queries'][0] for res in results],
+                self.test_cfg.inscat_topk_insts)
+        elif self.test_cfg.merge_type == 'learnable_online':
+            pass
+        else:
+            raise NotImplementedError("Unknown merge_type.")
+
+        ## Offline semantic segmentation
+        mv_sem = torch.cat([res['pts_semantic_mask'][0] for res in results])
+        
+        if self.use_bbox:
+            batch_data_samples[0].pred_bbox = mv_bboxes.cpu().numpy()
+        
+        # Not mapping to reconstructed point clouds, return directly for visualization
+        merged_result = PointData(
+            pts_semantic_mask=[mv_sem.cpu().numpy()],
+            pts_instance_mask=[mv_mask.cpu().numpy()],
+            instance_labels=mv_labels.cpu().numpy(),
+            instance_scores=mv_scores.cpu().numpy())
+        batch_data_samples[0].pred_pts_seg = merged_result
+        return batch_data_samples

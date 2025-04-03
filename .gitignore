@@ -1,0 +1,5 @@
+work_dirs 
+
+*.pyc
+__pycache__/
+*.pt

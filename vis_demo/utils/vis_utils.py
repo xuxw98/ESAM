@@ -3,7 +3,7 @@ import os
 
 
 class vis_pointcloud:
-    def __init__(self,use_vis):
+    def __init__(self, use_vis, online_vis=False):
         self.use_vis=use_vis
         if self.use_vis==0:
             return
@@ -22,6 +22,8 @@ class vis_pointcloud:
     def update(self,points,points_color):
         if self.use_vis==0:
             return
+        if self.online_vis:
+            self.vis.clear_geometries()
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(points)
         pcd.colors =  o3d.utility.Vector3dVector(points_color/255)
