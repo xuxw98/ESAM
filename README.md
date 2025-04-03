@@ -9,7 +9,7 @@ In this work, we presented ESAM, an efficient framework that leverages vision fo
 
 
 ## News
-- [2025/4/03]: Now custom dataset is supported! Users can run EmbodiedSAM on their own data following [here](./docs/demo.md).
+- [2025/4/03]: Custom dataset is supported! Users can run EmbodiedSAM on their own data following [here](./docs/demo.md).
 - [2025/2/11]: EmbodiedSAM is selected as an <b>oral presentation</b> in ICLR 2025!
 - [2025/1/23]: EmbodiedSAM is accepted to ICLR 2025 with a top 2% rating!
 - [2024/10/01]: Demo code available at [here](https://github.com/xuxw98/ESAM/blob/main/docs/demo.md).
