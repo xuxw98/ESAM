@@ -16,6 +16,9 @@ In this work, we presented ESAM, an efficient framework that leverages vision fo
 
 
 ## Demo
+### Real-world:
+![demo](./assets/real-world.gif)
+
 ### Bedroom:
 ![demo](./assets/demo2.gif)
 
