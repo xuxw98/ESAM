@@ -20,10 +20,10 @@ In this work, we presented ESAM, an efficient framework that leverages vision fo
 ![demo](./assets/real-world.gif)
 
 ### Bedroom:
-<img src="./assets/demo2.gif" width="500" />
+<img src="./assets/demo2.gif" width="450" />
 
 ### Office:
-<img src="./assets/demo1.gif" width="500" />
+<img src="./assets/demo1.gif" width="450" />
 
 Demos are a little bit large; please wait a moment to load them. Welcome to the home page for more complete demos and detailed introductions.
 
