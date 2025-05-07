@@ -1,5 +1,5 @@
 # EmbodiedSAM: Online Segment Any 3D Thing in Real Time
-### [Paper](https://arxiv.org/abs/2408.11811) | [Project Page](https://xuxw98.github.io/ESAM/) | [Video](https://cloud.tsinghua.edu.cn/f/db96edf2f5794c6ab23d/?dl=1) | [中文解读](https://zhuanlan.zhihu.com/p/23105869992)
+### [Paper](https://arxiv.org/abs/2408.11811) | [Project Page](https://xuxw98.github.io/ESAM/) | [Video](https://cloud.tsinghua.edu.cn/f/000910bee9d5476db250/?dl=1) | [中文解读](https://zhuanlan.zhihu.com/p/23105869992)
 
 > EmbodiedSAM: Online Segment Any 3D Thing in Real Time  
 > [Xiuwei Xu](https://xuxw98.github.io/), Huangxing Chen, [Linqing Zhao](https://scholar.google.com/citations?user=ypxt5UEAAAAJ&hl=zh-CN&oi=ao), [Ziwei Wang](https://ziweiwangthu.github.io/), [Jie Zhou](https://scholar.google.com/citations?user=6a79aPwAAAAJ&hl=en&authuser=1), [Jiwen Lu](http://ivg.au.tsinghua.edu.cn/Jiwen_Lu/)
